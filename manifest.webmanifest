@@ -1,0 +1,21 @@
+{
+  "name": "세미콜론 — SQLD 합격 노트",
+  "short_name": "세미콜론",
+  "description": "SQLD 시험 범위를 장마다 읽고, 바로 풀고, 틀린 것만 다시 보는 공부 노트",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6fb",
+  "theme_color": "#f4f6fb",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "오답 노트", "url": "./#/quiz/wrong" },
+    { "name": "모의고사", "url": "./#/exam" },
+    { "name": "한 장 요약", "url": "./#/sheet" }
+  ]
+}
