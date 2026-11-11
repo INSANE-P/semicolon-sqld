@@ -427,6 +427,9 @@ table.grid th:last-child, table.grid td:last-child { border-right: 0; }
 table.grid th { background: var(--surface-2); color: var(--ink); font-size: 12px; font-weight: 750; }
 table.grid td.num { text-align: right; font-variant-numeric: tabular-nums; }
 table.grid tr:last-child td { border-bottom: 0; }
+table.grid th:first-child, table.grid td:first-child { position: sticky; left: 0; z-index: 1; background: var(--surface); }
+table.grid th:first-child { background: var(--surface-2); }
+.can-scroll:not(.at-end) { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); }
 .null { color: var(--ink-3); font-style: italic; font-size: .92em; }
 
 .sql { margin: 0 0 1.4em; border-radius: var(--r-md); overflow: hidden; background: var(--code-bg); box-shadow: var(--sh-2); }
@@ -438,7 +441,8 @@ table.grid tr:last-child td { border-bottom: 0; }
 .sql-top .lang { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--code-cm); letter-spacing: .08em; margin-left: 4px; }
 .sql-top .copy { margin-left: auto; border: 0; background: rgba(255, 255, 255, .07); color: #b9c7c0; font-size: 12px; font-weight: 650; border-radius: 8px; padding: 3px 10px; transition: background .15s; }
 .sql-top .copy:hover { background: rgba(255, 255, 255, .14); color: #fff; }
-.sql pre { margin: 0; padding: 10px 18px 16px; overflow-x: auto; font-family: var(--mono); font-size: 13.5px; line-height: 1.7; color: var(--code-ink); tab-size: 2; }
+.sql pre { margin: 0; padding: 10px 18px 16px; overflow: visible; font-family: var(--mono); font-size: 13.5px; line-height: 1.7; color: var(--code-ink); tab-size: 2; }
+pre .l { display: block; padding-left: calc((var(--i, 0) + 2) * 1ch); text-indent: -2ch; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 1.7em; }
 .sql .k { color: var(--code-kw); font-weight: 600; } .sql .s { color: var(--code-str); } .sql .n { color: var(--code-num); } .sql .c { color: var(--code-cm); font-style: italic; }
 .sql .res { background: var(--surface); padding: 12px 16px 14px; }
 .sql .res .lbl { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 800; color: var(--ok-ink); background: var(--ok-50); padding: 2px 10px 2px 7px; border-radius: 999px; margin-bottom: 8px; }
@@ -471,7 +475,21 @@ table.grid tr:last-child td { border-bottom: 0; }
 
 figure { margin: 0 0 1.6em; }
 figure .fig { border: 1px solid var(--line); border-radius: var(--r-lg); background-color: var(--surface); padding: 18px 16px; overflow-x: auto; box-shadow: var(--sh-1); background-image: radial-gradient(var(--surface-3) 1px, transparent 1.3px); background-size: 16px 16px; }
-figure svg { display: block; width: 100%; min-width: 480px; height: auto; font-family: var(--sans); }
+figure svg { display: block; width: 100%; height: auto; font-family: var(--sans); }
+figure .fig { position: relative; }
+.zoom { position: absolute; right: 10px; top: 10px; display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 11px; border-radius: 999px; border: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 92%, transparent); color: var(--ink-2); font-size: 12.5px; font-weight: 700; box-shadow: var(--sh-1); backdrop-filter: blur(6px); }
+.zoom svg { width: 15px; height: 15px; }
+.zoom:hover { color: var(--brand-ink); border-color: var(--brand-100); }
+@media (min-width: 900px) { .zoom { opacity: 0; transition: opacity .2s; } figure:hover .zoom, .zoom:focus-visible { opacity: 1; } }
+dialog.lightbox { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: var(--surface); color: var(--ink); display: none; }
+dialog.lightbox[open] { display: flex; flex-direction: column; animation: fade .2s both; }
+dialog.lightbox::backdrop { background: rgba(8, 12, 30, .6); }
+.lb-top { display: flex; align-items: flex-start; gap: 10px; padding: calc(10px + env(safe-area-inset-top)) 10px 8px 18px; border-bottom: 1px solid var(--line); }
+.lb-cap { flex: 1; margin: 8px 0 0; font-size: 14.5px; font-weight: 650; line-height: 1.55; }
+.lb-body { flex: 1; overflow: auto; padding: 18px; background-color: var(--surface); background-image: radial-gradient(var(--surface-3) 1px, transparent 1.3px); background-size: 16px 16px; touch-action: pan-x pan-y pinch-zoom; display: flex; }
+.lb-body svg { flex: none; margin: auto; width: max(680px, 100%); max-width: 1100px; height: auto; font-family: var(--sans); }
+.lb-hint { margin: 0; padding: 10px 18px calc(12px + env(safe-area-inset-bottom)); font-size: 13px; color: var(--ink-3); text-align: center; border-top: 1px solid var(--line); }
+@media (min-width: 900px) { dialog.lightbox { width: min(1160px, 92vw); height: auto; max-height: 90vh; margin: auto; border-radius: 22px; box-shadow: var(--sh-3); } .lb-hint { display: none; } .lb-body svg { width: 100%; } }
 figcaption { display: flex; gap: 8px; justify-content: center; font-size: 13.5px; color: var(--ink-2); margin-top: 8px; text-align: center; line-height: 1.55; }
 figcaption::before { content: "그림"; flex: none; font-size: 11px; font-weight: 800; color: var(--brand-ink); background: var(--brand-50); padding: 1px 8px; border-radius: 6px; height: fit-content; margin-top: 1px; }
 svg .ln { stroke: var(--ink-2); stroke-width: 1.5; fill: none; }
@@ -731,4 +749,40 @@ canvas.confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointe
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* ── 휴대폰에서 읽기 좋게 ─────────────────── */
+@media (max-width: 600px) {
+  main { padding-left: 16px; padding-right: 16px; }
+  .sql pre { font-size: 12.5px; padding: 8px 14px 14px; }
+  .sql .res, .sql .note { padding-left: 14px; padding-right: 14px; }
+  table.grid { font-size: 12.5px; }
+  table.grid th, table.grid td { padding: 4px 10px; }
+  .q { padding: 16px 14px; }
+  .choice { padding: 12px; gap: 10px; grid-template-columns: 28px 1fr; font-size: 15px; }
+  .choice .cn { width: 26px; height: 26px; }
+  .box { padding: 14px 14px 14px 52px; }
+  .box .bi { left: 13px; top: 14px; width: 28px; height: 28px; }
+  .goals { padding: 16px; }
+  .keys { padding: 22px 16px 18px; }
+  figure .fig { padding: 12px 8px; cursor: zoom-in; margin-left: -6px; margin-right: -6px; }
+  details.check .ans { padding-left: 16px; }
+  .prose h2 { font-size: 20px; }
+
+  /* 칸이 셋 이상인 표는 줄마다 카드로 쌓는다 */
+  .tbl-wrap.stack { overflow: visible; border: 0; background: none; box-shadow: none; -webkit-mask-image: none; mask-image: none; }
+  .tbl-wrap.stack table, .tbl-wrap.stack tbody, .tbl-wrap.stack tr, .tbl-wrap.stack td { display: block; width: auto; }
+  .tbl-wrap.stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .tbl-wrap.stack caption { display: block; padding: 0 2px 8px; }
+  .tbl-wrap.stack tr { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--t, var(--brand)); border-radius: 14px; padding: 12px 14px 10px; margin-bottom: 10px; box-shadow: var(--sh-1); }
+  .tbl-wrap.stack tbody tr:hover { background: var(--surface); }
+  .tbl-wrap.stack td { border: 0; padding: 4px 0; display: grid; grid-template-columns: 4.6em 1fr; gap: 10px; font-size: 15px; font-weight: 400; }
+  .tbl-wrap.stack td::before { content: attr(data-label); font-size: 12px; font-weight: 750; color: var(--ink-3); padding-top: 3px; line-height: 1.4; }
+  .tbl-wrap.stack td:first-child { display: block; font-weight: 750; font-size: 15.5px; padding: 0 0 8px; margin-bottom: 4px; border-bottom: 1px dashed var(--line); }
+  .tbl-wrap.stack td:first-child::before { display: none; }
+
+  .navi { gap: 5px; }
+  .navi button { font-size: 12px; border-radius: 8px; }
+  .subj-res { grid-template-columns: 1fr; }
+  .rules b { font-size: 19px; }
 }

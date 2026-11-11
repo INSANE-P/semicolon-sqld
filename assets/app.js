@@ -64,6 +64,11 @@
     }
     return out + esc(code.slice(last));
   };
+  // 줄마다 나눠 칠한다. 좁은 화면에서 긴 줄은 접히고, 접힌 줄은 원래 들여쓰기보다 두 칸 더 들어간다
+  const hlLines = code => code.split('\n').map(line => {
+    const k = line.match(/^ */)[0].length;
+    return '<span class="l" style="--i:' + k + '">' + (hl(line.slice(k)) || ' ') + '</span>';
+  }).join('');
   const cell = v => v === null || v === undefined ? '<td class="null">NULL</td>' : '<td' + (typeof v === 'number' ? ' class="num"' : '') + '>' + esc(v) + '</td>';
   // 가로로 넘칠 수 있는 상자는 키보드로도 밀 수 있게 초점을 받는다
   const scrollable = label => ' tabindex="0" role="group" aria-label="' + esc(label) + '"';
@@ -75,7 +80,7 @@
   const sqlBox = (code, result, note) => {
     const ci = codeStore.push(code) - 1;
     return '<div class="sql"><div class="sql-top"><span class="dots"><i></i><i></i><i></i></span><span class="lang">SQL</span>' +
-      '<button class="copy" data-act="copy" data-c="' + ci + '" aria-label="SQL 복사">복사</button></div><pre' + scrollable('SQL') + '>' + hl(code) + '</pre>' +
+      '<button class="copy" data-act="copy" data-c="' + ci + '" aria-label="SQL 복사">복사</button></div><pre>' + hlLines(code) + '</pre>' +
       (result ? '<div class="res"><div class="lbl">' + I.check + '결과</div><br>' + grid(result) + '</div>' : '') +
       (note ? '<div class="note">' + fmt(note) + '</div>' : '') + '</div>';
   };
@@ -111,6 +116,7 @@
     pin: ic('<path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v8"/>'),
     list: ic('<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>'),
     star: ic('<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>'),
+    zoom: ic('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3M11 8.5v5M8.5 11h5"/>'),
     sparkle: ic('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>')
   };
   const MARK = '<svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect y="5" width="64" height="59" rx="17" fill="#2238c9"/><rect width="64" height="59" rx="17" fill="#3b5bfd"/>' +
@@ -186,6 +192,34 @@
   const burstFrom = el => { const r = el.getBoundingClientRect(); confetti(r.left + r.width / 2, r.top + r.height / 2, 46); };
 
   /* ── 숫자 올라가기 ────────────────────────────────── */
+  /* ── 넓은 표와 그림 ────────────────────────────────── */
+  // 옆으로 더 밀 수 있는 상자에 표시를 붙인다(오른쪽 끝이 흐려진다)
+  const markScroll = () => $$('.grid-wrap, .tbl-wrap', main).forEach(el => {
+    const over = el.scrollWidth > el.clientWidth + 2;
+    el.classList.toggle('can-scroll', over);
+    el.classList.toggle('at-end', !over || el.scrollLeft + el.clientWidth >= el.scrollWidth - 2);
+  });
+  document.addEventListener('scroll', e => {
+    const t = e.target; if (t.classList && t.classList.contains('can-scroll')) t.classList.toggle('at-end', t.scrollLeft + t.clientWidth >= t.scrollWidth - 2);
+  }, true);
+  let resizeT; addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(markScroll, 150); });
+  // 그림 크게 보기: 화면 가득 띄우고 옆으로 밀거나 두 손가락으로 키운다
+  const openZoom = fig => {
+    let d = $('#lightbox');
+    if (!d) {
+      d = document.createElement('dialog'); d.id = 'lightbox'; d.className = 'lightbox'; d.setAttribute('aria-label', '그림 크게 보기');
+      d.innerHTML = '<div class="lb-top"><p class="lb-cap"></p><button class="icon-btn" data-act="lb-close" aria-label="닫기">' + I.x + '</button></div>' +
+        '<div class="lb-body" tabindex="0" role="group" aria-label="그림"></div><p class="lb-hint">옆으로 밀거나 두 손가락으로 키워 보세요. 휴대폰을 가로로 돌리면 더 크게 보여요.</p>';
+      d.addEventListener('click', e => { if (e.target === d) d.close(); });
+      document.body.appendChild(d);
+    }
+    const svg = $('svg', fig).cloneNode(true);
+    $('.lb-body', d).replaceChildren(svg);
+    $('.lb-cap', d).innerHTML = fig.parentElement.querySelector('figcaption').innerHTML;
+    d.showModal();
+    const body = $('.lb-body', d); body.scrollLeft = 0; body.focus();
+  };
+
   const countUp = () => $$('[data-count]', main).forEach(el => {
     const to = +el.dataset.count, suf = el.dataset.suf || '';
     if (reduce || !to) { el.textContent = to + suf; return; }
@@ -200,16 +234,21 @@
       case 'h': return '<h2>' + fmt(b.x) + '</h2>';
       case 'p': return '<p>' + fmt(b.x) + '</p>';
       case 'ul': case 'ol': return '<' + b.t + '>' + b.items.map(i => '<li>' + fmt(i) + '</li>').join('') + '</' + b.t + '>';
-      case 'table': return '<div class="tbl-wrap"' + scrollable(b.caption || b.head.filter(Boolean).join(', ') + ' 표') + '><table>' + (b.caption ? '<caption>' + fmt(b.caption) + '</caption>' : '') + '<thead><tr>' +
-        b.head.map(h => '<th scope="col">' + (String(h).trim() ? fmt(h) : '<span class="sr">구분</span>') + '</th>').join('') + '</tr></thead><tbody>' +
-        b.rows.map(r => '<tr>' + r.map(c => '<td>' + fmt(c === null ? 'NULL' : c) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
+      case 'table': {
+        // 칸이 셋 이상이면 휴대폰에서 줄마다 카드로 쌓는다. 칸 이름은 data-label 로 붙인다
+        const lbl = b.head.map(h => esc(String(h).replace(/[`*=]/g, '').trim()));
+        return '<div class="tbl-wrap' + (b.head.length >= 3 ? ' stack' : '') + '"' + scrollable(b.caption || b.head.filter(Boolean).join(', ') + ' 표') + '><table>' + (b.caption ? '<caption>' + fmt(b.caption) + '</caption>' : '') + '<thead><tr>' +
+          b.head.map(h => '<th scope="col">' + (String(h).trim() ? fmt(h) : '<span class="sr">구분</span>') + '</th>').join('') + '</tr></thead><tbody>' +
+          b.rows.map(r => '<tr>' + r.map((c, i) => '<td' + (lbl[i] ? ' data-label="' + lbl[i] + '"' : '') + '>' + fmt(c === null ? 'NULL' : c) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
+      }
       case 'data': return '<div class="grids">' + grid(b, b.name) + '</div>';
       case 'sql': return sqlBox(b.code, b.result, b.note);
       case 'trap': return '<div class="box trap"><span class="bi">' + I.alert + '</span><div class="bt">함정<span>' + fmt(b.title) + '</span></div><p>' + fmt(b.x) + '</p></div>';
       case 'tip': return '<div class="box tip"><span class="bi">' + I.bulb + '</span><div class="bt"><span>' + fmt(b.title) + '</span></div><p>' + fmt(b.x) + '</p></div>';
       case 'vs': return '<div class="vs">' + ['a', 'b', 'c', 'd'].filter(k => b[k]).map(k =>
         '<div><h3 class="vs-t">' + fmt(b[k].title) + '</h3><ul>' + b[k].items.map(i => '<li>' + fmt(i) + '</li>').join('') + '</ul></div>').join('') + '</div>';
-      case 'fig': return '<figure><div class="fig"' + scrollable('그림') + '>' + b.svg.replace('<svg ', '<svg role="img" aria-label="' + esc(b.caption.replace(/[`*=]/g, '')) + '" ') + '</div><figcaption>' + fmt(b.caption) + '</figcaption></figure>';
+      case 'fig': return '<figure><div class="fig">' + b.svg.replace('<svg ', '<svg role="img" aria-label="' + esc(b.caption.replace(/[`*=]/g, '')) + '" ') +
+        '<button class="zoom" data-act="zoom" aria-label="그림 크게 보기">' + I.zoom + '<span>크게</span></button></div><figcaption>' + fmt(b.caption) + '</figcaption></figure>';
       case 'check': return '<details class="check"><summary><span class="qi">?</span><span>' + fmt(b.q) + '</span><span class="tg">답 보기</span></summary><div class="ans">' + fmt(b.a) + '</div></details>';
     }
     return '';
@@ -230,7 +269,7 @@
       const n = i + 1; let cls = 'choice';
       if (reveal) { if (n === q.answer) cls += ' right'; else if (n === o.picked) cls += ' wrong'; else cls += ' dim'; }
       else if (n === o.picked) cls += ' sel';
-      const body = typeof c === 'string' ? '<span>' + fmt(c) + '</span>' : c.code ? '<pre>' + hl(c.code) + '</pre>' : grid(c);
+      const body = typeof c === 'string' ? '<span>' + fmt(c) + '</span>' : c.code ? '<pre>' + hlLines(c.code) + '</pre>' : grid(c);
       return '<li><button class="' + cls + '" data-act="pick" data-q="' + q.id + '" data-i="' + n + '"' + (reveal ? ' disabled' : '') + '><span class="cn">' + n + '</span>' + body + '</button></li>';
     }).join('') + '</ol>';
     if (reveal && o.ctx !== 'sess') {
@@ -681,7 +720,7 @@
     else if (r[0] === 'cards') viewCards();
     else if (r[0] === 'sheet') viewSheet();
     else viewHome();
-    renderNav(); closeSide(); countUp();
+    renderNav(); closeSide(); countUp(); markScroll();
     const moved = lastHash !== location.hash;
     if (moved && !quiet) {
       const first = lastHash === null;
@@ -706,6 +745,8 @@
 
   /* ── 누르기 ────────────────────────────────────────── */
   document.addEventListener('click', ev => {
+    // 휴대폰에서는 그림 아무 데나 눌러도 크게 본다
+    const fg = ev.target.closest('.fig'); if (fg && innerWidth < 900 && !ev.target.closest('[data-act]')) { openZoom(fg); return; }
     const el = ev.target.closest('[data-act]'); if (!el) return;
     const act = el.dataset.act, r = route(), e = S.exam;
     if (act === 'pick') {
@@ -713,7 +754,7 @@
       if (ctx === 'chap') {
         if (picks[q.id]) return; picks[q.id] = i; record(q.id, ok);
         const n = CH[r[1]].quiz.indexOf(q) + 1;
-        card.outerHTML = qCard(q, { n, ctx: 'chap', picked: i, reveal: true });
+        card.outerHTML = qCard(q, { n, ctx: 'chap', picked: i, reveal: true }); markScroll();
         const nc = $('#q-' + q.id);
         if (ok) burstFrom($('.choice.right', nc)); else nc.classList.add('shake');
         const w = $('.why', nc); if (w) { w.tabIndex = -1; w.focus({ preventScroll: true }); }
@@ -759,6 +800,8 @@
       if (navigator.clipboard) navigator.clipboard.writeText(code).then(done, done); else done();
     }
     else if (act === 'print') print();
+    else if (act === 'zoom') openZoom(el.closest('.fig'));
+    else if (act === 'lb-close') $('#lightbox').close();
     else if (act === 'install') { if (installEvt) { installEvt.prompt(); installEvt.userChoice.then(() => { installEvt = null; render(true); }); } }
     else if (act === 'install-no') { S.noInstall = true; save(); render(true); }
   });
