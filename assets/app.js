@@ -65,19 +65,24 @@
     return out + esc(code.slice(last));
   };
   const cell = v => v === null || v === undefined ? '<td class="null">NULL</td>' : '<td' + (typeof v === 'number' ? ' class="num"' : '') + '>' + esc(v) + '</td>';
-  const grid = (g, name) => '<div class="grid-wrap">' + (name ? '<div class="grid-name">' + esc(name) + '</div><br>' : '') + '<table class="grid"><thead><tr>' +
-    g.head.map(h => '<th>' + esc(h) + '</th>').join('') + '</tr></thead><tbody>' +
+  // 가로로 넘칠 수 있는 상자는 키보드로도 밀 수 있게 초점을 받는다
+  const scrollable = label => ' tabindex="0" role="group" aria-label="' + esc(label) + '"';
+  const grid = (g, name) => '<div class="grid-wrap"' + scrollable(name ? name + ' 테이블' : '결과 테이블') + '>' + (name ? '<div class="grid-name" aria-hidden="true">' + esc(name) + '</div><br>' : '') + '<table class="grid"><thead><tr>' +
+    g.head.map(h => '<th scope="col">' + esc(h) + '</th>').join('') + '</tr></thead><tbody>' +
     (g.rows.length ? g.rows.map(r => '<tr>' + r.map(cell).join('') + '</tr>').join('') : '<tr><td class="null" colspan="' + g.head.length + '">행 없음</td></tr>') +
     '</tbody></table></div>';
   let codeStore = [];
   const sqlBox = (code, result, note) => {
     const ci = codeStore.push(code) - 1;
     return '<div class="sql"><div class="sql-top"><span class="dots"><i></i><i></i><i></i></span><span class="lang">SQL</span>' +
-      '<button class="copy" data-act="copy" data-c="' + ci + '">복사</button></div><pre>' + hl(code) + '</pre>' +
+      '<button class="copy" data-act="copy" data-c="' + ci + '" aria-label="SQL 복사">복사</button></div><pre' + scrollable('SQL') + '>' + hl(code) + '</pre>' +
       (result ? '<div class="res"><div class="lbl">' + I.check + '결과</div><br>' + grid(result) + '</div>' : '') +
       (note ? '<div class="note">' + fmt(note) + '</div>' : '') + '</div>';
   };
-  const stars = w => '<span class="stars" title="출제 비중">' + '★'.repeat(w) + '<i>' + '★'.repeat(3 - w) + '</i></span>';
+  // 출제 비중 별. 글자 대신 그림으로 그리고 뜻은 이름으로 읽어 준다
+  const STAR = '<svg viewBox="0 0 24 24"><path d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z"/></svg>';
+  const WEIGHT = ['', '가끔 나와요', '자주 나와요', '거의 매회 나와요'];
+  const stars = w => '<span class="stars" role="img" aria-label="출제 비중 ' + w + '/3, ' + WEIGHT[w] + '" title="' + WEIGHT[w] + '">' + STAR.repeat(w) + '<i>' + STAR.repeat(3 - w) + '</i></span>';
 
   /* ── 아이콘 ────────────────────────────────────────── */
   const ic = (d, sw) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 2) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
@@ -156,7 +161,7 @@
   /* ── 꽃가루 ───────────────────────────────────────── */
   const confetti = (x, y, n) => {
     if (reduce) return;
-    const cv = document.createElement('canvas'); cv.className = 'confetti'; document.body.appendChild(cv);
+    const cv = document.createElement('canvas'); cv.className = 'confetti'; cv.setAttribute('aria-hidden', 'true'); cv.setAttribute('role', 'presentation'); document.body.appendChild(cv);
     const dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight;
     cv.width = W * dpr; cv.height = H * dpr; const g = cv.getContext('2d'); g.scale(dpr, dpr);
     const colors = ['#ffc93c', '#3b5bfd', '#0c9c8f', '#8b5cf6', '#f0802e', '#169c5a', '#ff6b8b'];
@@ -195,16 +200,16 @@
       case 'h': return '<h2>' + fmt(b.x) + '</h2>';
       case 'p': return '<p>' + fmt(b.x) + '</p>';
       case 'ul': case 'ol': return '<' + b.t + '>' + b.items.map(i => '<li>' + fmt(i) + '</li>').join('') + '</' + b.t + '>';
-      case 'table': return '<div class="tbl-wrap"><table>' + (b.caption ? '<caption>' + fmt(b.caption) + '</caption>' : '') + '<thead><tr>' +
-        b.head.map(h => '<th>' + fmt(h) + '</th>').join('') + '</tr></thead><tbody>' +
+      case 'table': return '<div class="tbl-wrap"' + scrollable(b.caption || b.head.filter(Boolean).join(', ') + ' 표') + '><table>' + (b.caption ? '<caption>' + fmt(b.caption) + '</caption>' : '') + '<thead><tr>' +
+        b.head.map(h => '<th scope="col">' + (String(h).trim() ? fmt(h) : '<span class="sr">구분</span>') + '</th>').join('') + '</tr></thead><tbody>' +
         b.rows.map(r => '<tr>' + r.map(c => '<td>' + fmt(c === null ? 'NULL' : c) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>';
       case 'data': return '<div class="grids">' + grid(b, b.name) + '</div>';
       case 'sql': return sqlBox(b.code, b.result, b.note);
       case 'trap': return '<div class="box trap"><span class="bi">' + I.alert + '</span><div class="bt">함정<span>' + fmt(b.title) + '</span></div><p>' + fmt(b.x) + '</p></div>';
       case 'tip': return '<div class="box tip"><span class="bi">' + I.bulb + '</span><div class="bt"><span>' + fmt(b.title) + '</span></div><p>' + fmt(b.x) + '</p></div>';
       case 'vs': return '<div class="vs">' + ['a', 'b', 'c', 'd'].filter(k => b[k]).map(k =>
-        '<div><h4>' + fmt(b[k].title) + '</h4><ul>' + b[k].items.map(i => '<li>' + fmt(i) + '</li>').join('') + '</ul></div>').join('') + '</div>';
-      case 'fig': return '<figure><div class="fig">' + b.svg + '</div><figcaption>' + fmt(b.caption) + '</figcaption></figure>';
+        '<div><h3 class="vs-t">' + fmt(b[k].title) + '</h3><ul>' + b[k].items.map(i => '<li>' + fmt(i) + '</li>').join('') + '</ul></div>').join('') + '</div>';
+      case 'fig': return '<figure><div class="fig"' + scrollable('그림') + '>' + b.svg.replace('<svg ', '<svg role="img" aria-label="' + esc(b.caption.replace(/[`*=]/g, '')) + '" ') + '</div><figcaption>' + fmt(b.caption) + '</figcaption></figure>';
       case 'check': return '<details class="check"><summary><span class="qi">?</span><span>' + fmt(b.q) + '</span><span class="tg">답 보기</span></summary><div class="ans">' + fmt(b.a) + '</div></details>';
     }
     return '';
@@ -264,7 +269,7 @@
   const renderNav = () => {
     const r = route(), sec = r[0] || '', cur = r[1], wn = wrongIds().length, d = dLeft();
     const doneN = ORDER.filter(id => S.done[id]).length;
-    const link = (href, icon, label, on, extra) => '<a class="nav-a' + (on ? ' on' : '') + '" href="' + href + '">' + icon + '<span>' + label + '</span>' + (extra || '') + '</a>';
+    const link = (href, icon, label, on, extra) => '<a class="nav-a' + (on ? ' on" aria-current="page' : '') + '" href="' + href + '">' + icon + '<span>' + label + '</span>' + (extra || '') + '</a>';
     let h = '<div class="side-top">' + brandHTML(true) +
       '<button class="icon-btn" data-act="theme" aria-label="밝은 화면과 어두운 화면 바꾸기">' + (isDark() ? I.sun : I.moon) + '</button></div>' +
       '<a class="side-dday" href="#/"><small>SQLD 시험 ' + dateLabel(examDate()) + '</small><b>' + (d > 0 ? 'D-' + d : d === 0 ? '오늘 시험' : '시험 끝') + '</b>' +
@@ -280,18 +285,23 @@
       const ids = s.parts.reduce((a, p) => a.concat(p.ids), []), dn = ids.filter(id => S.done[id]).length;
       h += '<div class="nav-group"><h4>' + s.name + ' · ' + esc(s.title) + '<span class="gp">' + dn + '/' + ids.length + '</span></h4>';
       ids.forEach(id => {
-        h += '<a class="nav-ch ' + tc(id) + (sec === 'learn' && cur === id ? ' on' : '') + '" href="#/learn/' + id + '"><span class="nb">' + NO[id] + '</span><span>' + esc(title(id)) + '</span><span class="ck' + (S.done[id] ? ' done' : '') + '"></span></a>';
+        h += '<a class="nav-ch ' + tc(id) + (sec === 'learn' && cur === id ? ' on" aria-current="page' : '') + '" href="#/learn/' + id + '"><span class="nb">' + NO[id] + '</span><span>' + esc(title(id)) + (S.done[id] ? '<span class="sr">, 읽음</span>' : '') + '</span><span class="ck' + (S.done[id] ? ' done' : '') + '" aria-hidden="true"></span></a>';
       });
       h += '</div>';
     });
     side.innerHTML = h;
-    const tab = (href, icon, label, on, dot) => '<a href="' + href + '"' + (on ? ' class="on"' : '') + '>' + icon + '<span>' + label + '</span>' + (dot ? '<i class="dot"></i>' : '') + '</a>';
+    const tab = (href, icon, label, on, dot) => '<a href="' + href + '"' + (on ? ' class="on" aria-current="page"' : '') + '>' + icon + '<span>' + label + '</span>' + (dot ? '<i class="dot" role="img" aria-label="틀린 문제 있음"></i>' : '') + '</a>';
     tabs.innerHTML = tab('#/', I.home, '오늘', sec === '') + tab('#/learn', I.book, '개념', sec === 'learn') +
       tab('#/quiz', I.pen, '문제', sec === 'quiz' || sec === 'exam', wn > 0) + tab('#/cards', I.cards, '카드', sec === 'cards') + tab('#/sheet', I.sheet, '요약', sec === 'sheet');
     $('#ddayTop').innerHTML = '시험 <b>' + dLabel(d) + '</b>';
     $('#brandTop').innerHTML = brandHTML(false);
   };
-  const closeSide = () => { side.classList.remove('open'); scrim.hidden = true; $('#menuBtn').setAttribute('aria-expanded', 'false'); };
+  const closeSide = () => {
+    const was = side.classList.contains('open');
+    side.classList.remove('open'); scrim.hidden = true; $('#menuBtn').setAttribute('aria-expanded', 'false');
+    side.inert = innerWidth < 1040;
+    return was;
+  };
 
   /* ── 앱으로 설치 ───────────────────────────────────── */
   let installEvt = null;
@@ -342,7 +352,7 @@
       (S.exams.length ? stat('t3', I.trophy, S.exams[S.exams.length - 1].score, '점', '최근 모의고사') : '<div class="stat t3"><span class="si">' + I.trophy + '</span><b>-</b><span class="sl">최근 모의고사</span></div>') + '</div>';
 
     h += '<section class="sec"><div class="sec-head"><h2>날짜별 계획</h2><small>하루치를 끝내면 다음 날이 가벼워져요</small></div><div class="seg">' +
-      plan.map((p, i) => '<button data-act="day" data-i="' + i + '"' + (i === planDay ? ' class="on"' : '') + '>' + (p.date === t ? '오늘' : dateLabel(p.date)) + (p.exam ? ' <span class="ex">시험</span>' : '') + '</button>').join('') + '</div>';
+      plan.map((p, i) => '<button data-act="day" data-i="' + i + '" aria-pressed="' + (i === planDay) + '"' + (i === planDay ? ' class="on"' : '') + '>' + (p.date === t ? '오늘' : dateLabel(p.date)) + (p.exam ? ' <span class="ex">시험</span>' : '') + '</button>').join('') + '</div>';
     const p = plan[planDay];
     const li = (href, cls, icon, label, meta, done) => '<li' + (done ? ' class="done"' : '') + '><a href="' + href + '" class="' + cls + '"><span class="pi">' + icon + '</span><span class="pt"><b>' + label + '</b><small>' + meta + '</small></span><span class="go">' + (done ? I.check : I.arrow) + '</span></a></li>';
     const chLi = (id, isLate) => li('#/learn/' + id, tc(id), NO[id], esc(title(id)),
@@ -411,7 +421,7 @@
       '<header class="chap-hero"><div class="crumb"><span class="nb">' + NO[id] + '</span><span class="chip">' + SUBJ[id].name + ' · ' + esc(PARTNAME[id]) + '</span></div>' +
       mascot('happy', 'bob') + '<h1 class="page-title">' + esc(c.title) + '</h1><p class="lead">' + fmt(c.lead) + '</p>' +
       '<div class="row" style="margin-top:16px"><span class="chip">' + I.clock + '읽기 ' + c.minutes + '분</span><span class="chip">' + I.pen + '문제 ' + c.quiz.length + '</span><span class="chip">출제 ' + stars(c.weight) + '</span></div></header>' +
-      '<div class="goals"><h3>' + I.target + '이 장을 읽고 나면</h3><ul>' + c.goals.map(g => '<li><span>' + fmt(g) + '</span></li>').join('') + '</ul></div>' +
+      '<div class="goals"><h2 class="goals-t">' + I.target + '이 장을 읽고 나면</h2><ul>' + c.goals.map(g => '<li><span>' + fmt(g) + '</span></li>').join('') + '</ul></div>' +
       '<article class="prose">' + c.blocks.map(block).join('') + '</article>' +
       '<section class="keys"><h2>' + I.pin + '시험 직전에 볼 것</h2><ol>' + c.keys.map(k => '<li><span>' + fmt(k) + '</span></li>').join('') + '</ol></section>' +
       '<div class="quiz-head"><span class="qh-i">' + I.pen + '</span><div><h2>바로 풀어 보기</h2><small>' + c.quiz.length + '문제 · 고르면 바로 해설이 나와요</small></div></div>' +
@@ -490,7 +500,7 @@
     }
     const q = s.qs[s.i], pk = s.picked[q.id];
     main.innerHTML = '<div class="sess-top"><a class="icon-btn" href="#/quiz" aria-label="그만하기">' + I.x + '</a><div class="bar"><i style="width:' + ((s.i + (pk ? 1 : 0)) / n * 100) + '%"></i></div><span class="cnt">' + (s.i + 1) + ' / ' + n + '</span></div>' +
-      '<p class="sess-label">' + esc(s.name) + (s.streak >= 3 ? ' · <span style="color:var(--t3)">' + s.streak + '연속 정답</span>' : '') + '</p>' +
+      '<h1 class="sess-label">' + esc(s.name) + '<span class="sr"> ' + (s.i + 1) + '번째 문제</span>' + (s.streak >= 3 ? ' · <span class="streak">' + s.streak + '연속 정답</span>' : '') + '</h1>' +
       qCard(q, { ctx: 'sess', picked: pk, reveal: !!pk, showChap: s.opt.showChap }) +
       (pk ? '' : '<div class="kbd-hint"><kbd>1</kbd>~<kbd>4</kbd> 로 고르고 <kbd>Enter</kbd> 로 넘어가요</div>');
     if (pk) showFb(q, pk);
@@ -499,14 +509,16 @@
     clearFb();
     const ok = pk === q.answer, cid = QCH[q.id], last = sess.i === sess.qs.length - 1;
     const praise = ['맞았어요', '정확해요', '좋아요', '바로 그거예요'][sess.streak % 4];
-    const f = document.createElement('div');
+    const f = document.createElement('section');
     f.className = 'fb ' + (ok ? 'ok' : 'no');
-    f.innerHTML = '<div class="fb-in"><div class="fb-head">' + mascot(ok ? 'cheer' : 'sad', 'hop') + '<div><h3>' + (ok ? praise : '정답은 ' + CN[q.answer]) + '</h3>' +
+    f.setAttribute('aria-label', '채점 결과');
+    f.innerHTML = '<div class="fb-in"><div class="fb-head">' + mascot(ok ? 'cheer' : 'sad', 'hop') + '<div><h2 class="fb-t" tabindex="-1">' + (ok ? praise : '틀렸어요. 정답은 ' + CN[q.answer]) + '</h2>' +
       '<small>' + (ok ? (sess.streak >= 2 ? sess.streak + '문제 연속이에요' : esc(q.tag)) : '오답 노트에 넣어 뒀어요') + '</small></div></div>' +
       '<div class="fb-why">' + fmt(q.why) + (sess.opt.showChap || !ok ? '<br><a href="#/learn/' + cid + '">' + NO[cid] + ' ' + esc(title(cid)) + ' 다시 읽기 →</a>' : '') + '</div>' +
       '<button class="btn lg ' + (ok ? 'ok' : 'no') + '" data-act="next">' + (last ? '결과 보기' : '계속하기') + '</button></div>';
     document.body.appendChild(f); document.body.classList.add('has-fb');
-    setTimeout(() => { const b = $('[data-act="next"]', f); if (b) b.focus({ preventScroll: true }); }, 50);
+    // 화면 읽기 프로그램이 결과부터 읽도록 제목에 초점을 둔다. Enter 로 바로 넘어갈 수 있다
+    setTimeout(() => { const t = $('.fb-t', f); if (t) t.focus({ preventScroll: true }); }, 60);
   };
 
   /* ── 모의고사 ──────────────────────────────────────── */
@@ -551,8 +563,8 @@
     const left = () => e.dur - Math.round((Date.now() - e.start) / 1000);
     if (left() <= 0) { gradeExam(); return viewExamResult(); }
     const n = e.ids.length, q = QS[e.ids[e.i]], answered = e.ids.filter(id => e.ans[id]).length;
-    main.innerHTML = '<div class="sess-top"><span class="cnt">' + (e.i < e.n1 ? '1과목' : '2과목') + '</span><div class="bar"><i style="width:' + (answered / n * 100) + '%"></i></div><span class="timer" id="timer">' + I.clock + fmtTime(left()) + '</span></div>' +
-      '<p class="sess-label">' + (e.i + 1) + ' / ' + n + ' · 푼 문제 ' + answered + '</p>' +
+    main.innerHTML = '<div class="sess-top"><span class="cnt">' + (e.i < e.n1 ? '1과목' : '2과목') + '</span><div class="bar"><i style="width:' + (answered / n * 100) + '%"></i></div><span class="timer" id="timer" role="timer" aria-label="남은 시간">' + I.clock + fmtTime(left()) + '</span></div>' +
+      '<h1 class="sess-label">모의고사 · ' + (e.i + 1) + ' / ' + n + ' · 푼 문제 ' + answered + '</h1>' +
       qCard(q, { ctx: 'exam', n: e.i + 1, picked: e.ans[q.id] }) +
       '<div class="sess-foot"><button class="btn" data-act="exam-go" data-i="' + (e.i - 1) + '"' + (e.i ? '' : ' disabled') + '>이전</button>' +
       '<button class="btn' + (e.flag[q.id] ? ' sun' : '') + '" data-act="exam-flag">' + I.flag + (e.flag[q.id] ? '표시됨' : '나중에') + '</button>' +
@@ -597,7 +609,7 @@
     main.className = '';
     if (!deck) buildDeck('all');
     const all = allCards(), dont = all.filter(c => S.cards[c.id] === 0).length, fresh = all.filter(c => S.cards[c.id] === undefined).length;
-    const chip = (f, label) => '<button data-act="deck" data-f="' + f + '"' + (deck.f === f ? ' class="on"' : '') + '>' + label + '</button>';
+    const chip = (f, label) => '<button data-act="deck" data-f="' + f + '" aria-pressed="' + (deck.f === f) + '"' + (deck.f === f ? ' class="on"' : '') + '>' + label + '</button>';
     let h = '<div class="fc-wrap"><div class="page-head" style="margin-bottom:14px"><h1 class="page-title">암기 카드</h1></div><div class="chips">' +
       chip('all', '전체 ' + all.length) + chip('s1', '1과목') + chip('s2', '2과목') + chip('new', '안 본 것 ' + fresh) + chip('dont', '모르는 것 ' + dont) + '</div>';
     const c = deck.cards[deck.i];
@@ -606,9 +618,9 @@
         '<div class="row" style="justify-content:center;margin-top:18px">' + (dont ? '<button class="btn primary" data-act="deck" data-f="dont">모르는 것만 다시</button>' : '') + '<button class="btn" data-act="deck" data-f="' + deck.f + '">다시 섞기</button></div></div>';
     } else {
       h += '<div class="sess-top" style="position:static;grid-template-columns:1fr auto"><div class="bar"><i style="width:' + (deck.i / deck.cards.length * 100) + '%"></i></div><span class="cnt">' + (deck.i + 1) + ' / ' + deck.cards.length + '</span></div>' +
-        '<div class="fc-stack' + (anim ? '' : '') + '"><button class="fc' + (deck.flip ? ' flip' : '') + '" data-act="flip" aria-label="카드 뒤집기">' +
-        '<div class="face front"><span class="side-lbl">' + NO[c.ch] + ' ' + esc(title(c.ch)) + '</span><div>' + fmt(c.q) + '</div><span class="hint">답을 떠올린 다음 눌러서 뒤집어요</span></div>' +
-        '<div class="face back"><span class="side-lbl">답</span><div>' + fmt(c.a) + '</div></div></button></div>' +
+        '<div class="fc-stack"><button class="fc' + (deck.flip ? ' flip' : '') + '" data-act="flip" aria-pressed="' + deck.flip + '">' +
+        '<div class="face front"' + (deck.flip ? ' aria-hidden="true"' : '') + '><span class="side-lbl">' + NO[c.ch] + ' ' + esc(title(c.ch)) + '</span><div>' + fmt(c.q) + '</div><span class="hint">답을 떠올린 다음 눌러서 뒤집어요</span></div>' +
+        '<div class="face back"' + (deck.flip ? '' : ' aria-hidden="true"') + '><span class="side-lbl">답</span><div>' + fmt(c.a) + '</div></div></button></div>' +
         '<div class="fc-btns"><button class="btn lg" data-act="card" data-v="0"' + (deck.flip ? '' : ' disabled') + '>' + I.x + '몰랐어요</button><button class="btn ok lg" data-act="card" data-v="1"' + (deck.flip ? '' : ' disabled') + '>' + I.check + '알았어요</button></div>' +
         '<div class="kbd-hint"><kbd>Space</kbd> 뒤집기 · <kbd>←</kbd> 몰랐어요 · <kbd>→</kbd> 알았어요</div>';
     }
@@ -616,7 +628,12 @@
   };
   const flipCard = () => {
     deck.flip = !deck.flip;
-    const f = $('.fc'); if (f) f.classList.toggle('flip', deck.flip);
+    const f = $('.fc');
+    if (f) {
+      f.classList.toggle('flip', deck.flip); f.setAttribute('aria-pressed', deck.flip);
+      $('.front', f).toggleAttribute('aria-hidden', deck.flip); $('.back', f).toggleAttribute('aria-hidden', !deck.flip);
+      if (deck.flip) say('답: ' + $('.back div', f).textContent);
+    }
     $$('[data-act="card"]').forEach(b => { b.disabled = !deck.flip; });
   };
   const answerCard = v => {
@@ -645,7 +662,11 @@
 
   /* ── 길 찾기 ───────────────────────────────────────── */
   let toastT;
+  const focusTitle = () => { const h = $('h1', main); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } };
+  // 화면 읽기 프로그램에 짧게 알린다. 같은 말을 두 번 해도 읽히도록 비웠다가 넣는다
+  const say = msg => { const el = $('#live'); if (!el) return; el.textContent = ''; setTimeout(() => { el.textContent = msg; }, 60); };
   const toast = msg => {
+    say(msg);
     let t = $('.toast'); if (t) t.remove();
     t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t);
     clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2200);
@@ -663,9 +684,12 @@
     renderNav(); closeSide(); countUp();
     const moved = lastHash !== location.hash;
     if (moved && !quiet) {
+      const first = lastHash === null;
       scrollTo(0, 0); lastHash = location.hash;
       main.classList.remove('enter'); void main.offsetWidth; main.classList.add('enter');
       const on = $('.nav-ch.on', side); if (on) on.scrollIntoView({ block: 'nearest' });
+      // 화면이 바뀌면 새 화면의 제목으로 초점을 옮겨 어디에 왔는지 읽히게 한다
+      if (!first) { const h1 = $('h1', main) || main; h1.tabIndex = -1; h1.focus({ preventScroll: true }); }
     }
     document.title = (r[0] === 'learn' && r[1] ? title(r[1]) + ' · ' : '') + '세미콜론';
     onScroll();
@@ -692,6 +716,7 @@
         card.outerHTML = qCard(q, { n, ctx: 'chap', picked: i, reveal: true });
         const nc = $('#q-' + q.id);
         if (ok) burstFrom($('.choice.right', nc)); else nc.classList.add('shake');
+        const w = $('.why', nc); if (w) { w.tabIndex = -1; w.focus({ preventScroll: true }); }
         chapScore(r[1]); renderNav();
       } else if (ctx === 'sess') {
         if (sess.picked[q.id]) return; sess.picked[q.id] = i; record(q.id, ok);
@@ -704,9 +729,9 @@
         save(); render(true);
       }
     }
-    else if (act === 'next') { sess.i++; clearFb(); render(true); scrollTo(0, 0); }
-    else if (act === 'retry') { const miss = sess.qs.filter(q => sess.picked[q.id] !== q.answer); startSess(sess.key, sess.name, shuffle(miss), sess.opt); render(true); scrollTo(0, 0); }
-    else if (act === 'again') { sess = null; render(true); scrollTo(0, 0); }
+    else if (act === 'next') { sess.i++; clearFb(); render(true); scrollTo(0, 0); focusTitle(); }
+    else if (act === 'retry') { const miss = sess.qs.filter(q => sess.picked[q.id] !== q.answer); startSess(sess.key, sess.name, shuffle(miss), sess.opt); render(true); scrollTo(0, 0); focusTitle(); }
+    else if (act === 'again') { sess = null; render(true); scrollTo(0, 0); focusTitle(); }
     else if (act === 'done') { const id = el.dataset.id; if (S.done[id]) delete S.done[id]; else { S.done[id] = true; burstFrom(el); } save(); render(true); }
     else if (act === 'day') { planDay = +el.dataset.i; render(true); }
     else if (act === 'theme') { const t = isDark() ? 'light' : 'dark'; document.documentElement.dataset.theme = t; try { localStorage.setItem('sqld.theme', t); } catch (x) {} renderNav(); }
@@ -717,12 +742,12 @@
       const ids = buildExam(); S.exam = { ids, n1: Math.min(10, ids.length), ans: {}, flag: {}, i: 0, start: Date.now(), dur: 90 * 60 }; save();
       location.hash = '#/exam'; render(true); scrollTo(0, 0);
     }
-    else if (act === 'exam-go') { e.i = Math.max(0, Math.min(e.ids.length - 1, +el.dataset.i)); save(); render(true); scrollTo(0, 0); }
+    else if (act === 'exam-go') { e.i = Math.max(0, Math.min(e.ids.length - 1, +el.dataset.i)); save(); render(true); scrollTo(0, 0); focusTitle(); }
     else if (act === 'exam-flag') { const qid = e.ids[e.i]; if (e.flag[qid]) delete e.flag[qid]; else e.flag[qid] = 1; save(); render(true); }
     else if (act === 'exam-submit') {
       const blank = e.ids.filter(id => !e.ans[id]).length;
       if (!confirm(blank ? '안 푼 문제가 ' + blank + '개 있어요. 그래도 제출할까요?' : '제출하고 채점할까요?')) return;
-      gradeExam(); render(true); scrollTo(0, 0);
+      gradeExam(); render(true); scrollTo(0, 0); focusTitle();
     }
     else if (act === 'scroll') { const t2 = document.getElementById('q-' + el.dataset.q); if (t2) t2.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); }
     else if (act === 'deck') { buildDeck(el.dataset.f); viewCards(); }
@@ -737,12 +762,19 @@
     else if (act === 'install') { if (installEvt) { installEvt.prompt(); installEvt.userChoice.then(() => { installEvt = null; render(true); }); } }
     else if (act === 'install-no') { S.noInstall = true; save(); render(true); }
   });
-  $('#menuBtn').addEventListener('click', function () { const o = !side.classList.contains('open'); side.classList.toggle('open', o); scrim.hidden = !o; this.setAttribute('aria-expanded', o); });
-  scrim.addEventListener('click', closeSide);
+  // 휴대폰에서 닫힌 목차는 키보드와 화면 읽기 프로그램이 지나치게 한다
+  const syncSide = () => { side.inert = innerWidth < 1040 && !side.classList.contains('open'); };
+  $('#menuBtn').addEventListener('click', function () {
+    const o = !side.classList.contains('open'); side.classList.toggle('open', o); scrim.hidden = !o; this.setAttribute('aria-expanded', o); syncSide();
+    if (o) { const f = $('.nav-a.on', side) || $('a', side); if (f) setTimeout(() => f.focus(), 50); }
+  });
+  scrim.addEventListener('click', () => { closeSide(); $('#menuBtn').focus(); });
+  addEventListener('resize', syncSide);
+  $('#skip').addEventListener('click', ev => { ev.preventDefault(); const h = $('h1', main) || main; h.tabIndex = -1; h.focus(); });
   document.addEventListener('keydown', ev => {
     if (ev.target.matches('input, textarea') || ev.ctrlKey || ev.metaKey || ev.altKey) return;
     const r = route();
-    if (ev.key === 'Escape') return closeSide();
+    if (ev.key === 'Escape') { if (closeSide()) $('#menuBtn').focus(); return; }
     if (r[0] === 'quiz' && r[1] && sess && sess.i < sess.qs.length) {
       if (/^[1-4]$/.test(ev.key)) { const b = $('.q[data-ctx="sess"] .choice[data-i="' + ev.key + '"]'); if (b && !b.disabled) b.click(); }
       else if (ev.key === 'Enter' || ev.key === 'ArrowRight') { const n = $('.fb [data-act="next"]'); if (n) { ev.preventDefault(); n.click(); } }
