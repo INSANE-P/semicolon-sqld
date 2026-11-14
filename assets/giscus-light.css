@@ -8,6 +8,5 @@ main { font-size: 15px; }
 main .btn { border-radius: 12px; font-weight: 700; padding: 6px 16px; }
 main .btn-primary { box-shadow: var(--color-btn-primary-shadow); }
 main .btn-primary:active { transform: translateY(2px); box-shadow: none; }
-main .form-control, main .gsc-comment-box-textarea { border-radius: 12px; }
 main .gsc-comment-box, main .gsc-comment > div { border-radius: 14px; }
 main .gsc-comment-box-tabs { border-radius: 12px 12px 0 0; }
