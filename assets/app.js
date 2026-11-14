@@ -26,7 +26,7 @@
   const KEY = 'sqld.v1';
   let S;
   try { S = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { S = {}; }
-  S.done = S.done || {}; S.q = S.q || {}; S.cards = S.cards || {}; S.exams = S.exams || []; S.exam = S.exam || null;
+  S.pos = S.pos || {}; S.done = S.done || {}; S.q = S.q || {}; S.cards = S.cards || {}; S.exams = S.exams || []; S.exam = S.exam || null;
   const ymd = d => d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   const today = () => ymd(new Date());
   if (!S.start) S.start = today();
@@ -374,6 +374,16 @@
   // 휴대폰은 아래에서 올라오는 판, 책상은 가운데 작은 창. 오늘 전 날짜는 고를 수 없다
   const dp = { sel: null, view: null, focus: null, back: null };
   const pad2 = n => ('0' + n).slice(-2);
+  const upcoming = () => (META.exams || []).filter(x => x.date >= today());
+  const examOf = d => (META.exams || []).find(x => x.date === d);
+  const examChips = (act, selDate) => upcoming().map(x => {
+    const dt = fromYmd(x.date), on = x.date === selDate;
+    return '<button type="button" class="ex-chip' + (on ? ' on' : '') + '" data-act="' + act + '" data-d="' + x.date + '" aria-pressed="' + on + '">' +
+      '<span class="xd">' + (dt.getFullYear() !== new Date().getFullYear() ? String(dt.getFullYear()).slice(2) + '년 ' : '') + (dt.getMonth() + 1) + '월 ' + dt.getDate() + '일 ' + WD[dt.getDay()] + '</span>' +
+      '<span class="xr">' + x.round + (x.sure ? '' : ' <i>예상</i>') + '</span></button>';
+  }).join('');
+  const examNote = () => upcoming().some(x => !x.sure)
+    ? '<p class="ex-note">예상이라고 적힌 날짜는 공고 전이라 올해 흐름으로 짐작한 거예요. 접수 전에 <a href="' + META.officialUrl + '" target="_blank" rel="noopener">데이터자격검정 사이트</a>에서 확인해 주세요.</p>' : '';
   const fromYmd = d => new Date(d + 'T00:00:00');
   const longLabel = d => { const x = fromYmd(d); return x.getFullYear() + '년 ' + (x.getMonth() + 1) + '월 ' + x.getDate() + '일 ' + WD[x.getDay()] + '요일'; };
   const dpEl = () => {
@@ -382,6 +392,7 @@
     d.innerHTML = '<div class="dp-grab" aria-hidden="true"></div>' +
       '<div class="dp-head"><h2 id="dpTitle">시험 날짜</h2><button class="icon-btn" data-act="dp-close" aria-label="닫기">' + I.x + '</button></div>' +
       '<div class="dp-sel" aria-live="polite"><b class="dp-day"></b><span class="dp-dd"></span></div>' +
+      '<div class="dp-ex"><h3>다가오는 시험</h3><div class="ex-list"></div><div class="ex-note-wrap"></div></div>' +
       '<div class="dp-nav"><button class="icon-btn" data-act="dp-prev" aria-label="이전 달">' + I.left + '</button><span class="dp-month" aria-live="polite"></span><button class="icon-btn" data-act="dp-next" aria-label="다음 달">' + I.right + '</button></div>' +
       '<table class="dp-grid" role="grid" aria-labelledby="dpTitle"><thead><tr>' + WD.map((w, i) => '<th scope="col" class="w' + i + '"><abbr title="' + w + '요일">' + w + '</abbr></th>').join('') + '</tr></thead><tbody></tbody></table>' +
       '<div class="dp-foot"><button class="btn ghost dp-reset" data-act="dp-reset">처음 날짜로</button><span class="grow"></span><button class="btn" data-act="dp-close">취소</button><button class="btn primary" data-act="dp-save">이 날로 정하기</button></div>';
@@ -396,7 +407,11 @@
   };
   const dpPaint = keepFocus => {
     const d = dpEl(), v = dp.view, t = today();
-    $('.dp-day', d).textContent = longLabel(dp.sel);
+    const ex = examOf(dp.sel);
+    $('.dp-day', d).textContent = (ex ? ex.round + ', ' : '') + longLabel(dp.sel);
+    $('.ex-list', d).innerHTML = examChips('dp-ex', dp.sel);
+    $('.ex-note-wrap', d).innerHTML = examNote();
+    $('.dp-ex', d).hidden = !upcoming().length;
     const n = dayDiff(t, dp.sel);
     $('.dp-dd', d).textContent = n > 0 ? 'D-' + n : '오늘';
     $('.dp-month', d).textContent = v.getFullYear() + '년 ' + (v.getMonth() + 1) + '월';
@@ -410,8 +425,9 @@
       for (let i = 0; i < 7; i++) {
         const x = new Date(start); x.setDate(start.getDate() + w * 7 + i);
         const id = ymd(x), out = x.getMonth() !== v.getMonth(), past = id < t, sel = id === dp.sel, now = id === t;
-        rows += '<td role="gridcell"' + (sel ? ' aria-selected="true"' : '') + '><button type="button" class="dd w' + i + (out ? ' out' : '') + (sel ? ' sel' : '') + (now ? ' now' : '') + '"' +
-          ' data-act="dp-pick" data-d="' + id + '" tabindex="' + (id === dp.focus ? 0 : -1) + '" aria-label="' + longLabel(id) + (now ? ', 오늘' : '') + (sel ? ', 고른 날짜' : '') + '"' +
+        const xm = examOf(id);
+        rows += '<td role="gridcell"' + (sel ? ' aria-selected="true"' : '') + '><button type="button" class="dd w' + i + (out ? ' out' : '') + (sel ? ' sel' : '') + (now ? ' now' : '') + (xm ? ' exam' : '') + '"' +
+          ' data-act="dp-pick" data-d="' + id + '" tabindex="' + (id === dp.focus ? 0 : -1) + '" aria-label="' + longLabel(id) + (now ? ', 오늘' : '') + (xm ? ', SQLD ' + xm.round + (xm.sure ? '' : ' 예상') : '') + (sel ? ', 고른 날짜' : '') + '"' +
           (now ? ' aria-current="date"' : '') + (past ? ' disabled' : '') + '>' + x.getDate() + '</button></td>';
       }
       rows += '</tr>';
@@ -447,7 +463,7 @@
   };
   const openDp = trigger => {
     dp.back = trigger || null;
-    dp.sel = examDate() < today() ? today() : examDate(); dp.focus = dp.sel;
+    dp.sel = examDate() < today() ? (upcoming()[0] ? upcoming()[0].date : today()) : examDate(); dp.focus = dp.sel;
     const v = fromYmd(dp.sel); dp.view = new Date(v.getFullYear(), v.getMonth(), 1);
     const d = dpEl(); dpPaint(false); d.showModal(); document.body.classList.add('dp-open');
     setTimeout(() => { const f = $('[data-d="' + dp.focus + '"]', d); if (f) f.focus(); }, 30);
@@ -479,7 +495,8 @@
     let h = '<section class="hero"><div class="hero-grid"><div>' +
       '<div class="hero-date"><span>오늘 ' + dateLabel(t) + '요일</span><span>시험 ' + dateLabel(examDate()) + '요일</span><button class="date-btn" data-act="examdate" aria-haspopup="dialog">' + I.calEdit + '날짜 바꾸기</button></div>' +
       '<h1 class="hero-title">' + (d > 0 ? '시험까지 <span class="num">' + d + '일</span>' : d === 0 ? '<span class="num">오늘</span> 시험이에요' : '시험이 끝났어요') + '</h1>' +
-      '<p class="hero-sub">' + (d < 0 ? '다음 시험을 준비한다면 날짜를 바꿔 주세요. 계획이 새 날짜에 맞춰 다시 나눠져요.' : todayIds.length ? '오늘 몫은 <b>' + todayIds.length + '개 장</b>, 대략 <b>' + todayMin + '분</b>이에요.' : doneN === ORDER.length ? '모든 장을 읽었어요. 모의고사로 마무리해요.' : '오늘 몫은 끝났어요. 틀린 문제만 다시 풀면 돼요.') + '</p>' +
+      '<p class="hero-sub">' + (d < 0 ? '다음 시험을 고르면 그 날짜까지 계획을 다시 나눠요.' : todayIds.length ? '오늘 몫은 <b>' + todayIds.length + '개 장</b>, 대략 <b>' + todayMin + '분</b>이에요.' : doneN === ORDER.length ? '모든 장을 읽었어요. 모의고사로 마무리해요.' : '오늘 몫은 끝났어요. 틀린 문제만 다시 풀면 돼요.') + '</p>' +
+      (d < 0 && upcoming().length ? '<div class="ex-list hero-ex" role="group" aria-label="다음 시험 고르기">' + examChips('pick-exam', '') + '</div>' : '') +
       '<div class="row">' + (next ? '<a class="btn sun lg" href="#/learn/' + next + '">' + (doneN ? NO[next] + '부터 이어서 읽기' : '첫 장부터 시작하기') + I.arrow + '</a>' : '<a class="btn sun lg" href="#/exam">모의고사 풀기' + I.arrow + '</a>') +
       (wn ? '<a class="btn glass lg" href="#/quiz/wrong">오답 ' + wn + '개</a>' : '<a class="btn glass lg" href="#/quiz/random">섞어서 10문제</a>') + '</div></div>' +
       '<div class="hero-art">' + ring(pct, { size: 140, sw: 10, color: 'var(--sun)', track: 'rgba(255,255,255,.15)' }) + mascot(d <= 0 ? 'cheer' : 'happy', 'bob') + '<span class="pct">' + Math.round(pct * 100) + '% 읽음</span></div></div></section>';
@@ -493,7 +510,8 @@
       stat(seen.length ? Math.round(okN / seen.length * 100) : null, '%', '정답률', '문제를 풀면 보여요') +
       stat(S.exams.length ? S.exams[S.exams.length - 1].score : null, '점', '최근 모의고사', '아직 안 봤어요') + '</div>';
 
-    h += '<section class="sec"><div class="sec-head"><h2>날짜별 계획</h2><small>날마다 읽을 장을 나눠 뒀어요</small></div><div class="seg">' +
+    if (d < 0) h += '<p class="ex-past">' + (upcoming().some(x => !x.sure) ? '다음 시험 날짜는 공고 전이라 예상으로 적어 뒀어요. 접수 전에 <a href="' + META.officialUrl + '" target="_blank" rel="noopener">데이터자격검정 사이트</a>에서 확인해 주세요.' : '') + '</p>';
+    if (d >= 0) h += '<section class="sec"><div class="sec-head"><h2>날짜별 계획</h2><small>날마다 읽을 장을 나눠 뒀어요</small></div><div class="seg">' +
       plan.map((p, i) => '<button data-act="day" data-i="' + i + '" aria-pressed="' + (i === planDay) + '"' + (i === planDay ? ' class="on"' : '') + '>' + (p.date === t ? '오늘' : dateLabel(p.date)) + (p.exam ? ' <span class="ex">시험</span>' : '') + '</button>').join('') + '</div>';
     const p = plan[planDay];
     const li = (href, cls, icon, label, meta, done) => '<li' + (done ? ' class="done"' : '') + '><a href="' + href + '" class="' + cls + '"><span class="pi">' + icon + '</span><span class="pt"><b>' + label + '</b><small>' + meta + '</small></span><span class="go">' + (done ? I.check : I.arrow) + '</span></a></li>';
@@ -511,9 +529,11 @@
       items += li('#/quiz/wrong', 't3', I.redo, '오늘 틀린 문제 다시 풀기', '<span>' + (wn ? wn + '개' : seen.length ? '다 맞혔어요' : '아직 없어요') + '</span>', wn === 0 && seen.length > 0) +
         li('#/cards', 't2', I.cards, '자기 전에 암기 카드 한 바퀴', '<span>10분</span>', false);
     }
-    h += '<ul class="plan">' + items + '</ul>';
-    if (p.exam) h += '<p class="small muted" style="margin-top:12px">시험 날에는 새 내용을 읽지 않아요. 수험표, 신분증, 컴퓨터용 사인펜을 챙기고 입실 시간은 수험표에서 확인하세요.</p>';
-    h += '</section>';
+    if (d >= 0) {
+      h += '<ul class="plan">' + items + '</ul>';
+      if (p.exam) h += '<p class="small muted" style="margin-top:12px">시험 날에는 새 내용을 읽지 않아요. 수험표, 신분증, 컴퓨터용 사인펜을 챙기고 입실 시간은 수험표에서 확인하세요.</p>';
+      h += '</section>';
+    }
 
     const weak = ORDER.map(id => { const s = chapStat(id); return { id, s, r: s.seen ? s.ok / s.seen : 1 }; }).filter(x => x.s.seen >= 3 && x.r < .7).sort((a, b) => a.r - b.r).slice(0, 4);
     if (weak.length) h += '<section class="sec"><div class="sec-head"><h2>약한 장</h2><small>정답률이 낮은 순서예요</small></div><div class="weak">' + weak.map(x =>
@@ -551,6 +571,32 @@
   /* ── 장 ────────────────────────────────────────────── */
   let picks = {}, hn = 0;
 
+  /* ── 읽기 편의 ─────────────────────────────────────── */
+  // 글자 크기: 작게, 보통, 크게. 이 브라우저에만 기억한다
+  const FS = [['s', '작게'], ['m', '보통'], ['l', '크게']];
+  const curFs = () => document.documentElement.dataset.fs || 'm';
+  const fsCtl = () => '<span class="fs" role="group" aria-label="글자 크기">' + FS.map(([k, label], i) =>
+    '<button type="button" data-act="fs" data-fs="' + k + '" aria-pressed="' + (curFs() === k) + '" aria-label="글자 ' + label + '" class="fs' + i + '">가</button>').join('') + '</span>';
+  // 이어 읽기: 마지막으로 지나간 소제목을 기억해 두었다가 다시 들어오면 알려 준다
+  const resumeBar = (id, c) => {
+    const k = S.pos[id]; if (!k || route()[2]) return '';
+    const heads = c.blocks.filter(b => b.t === 'h'); if (!heads[k]) return '';
+    return '<div class="resume" role="note"><span>지난번에 <b>"' + esc(plain(heads[k].x)) + '"</b> 부분까지 읽었어요.</span><button class="btn sm" data-act="toc" data-h="h-' + k + '">이어 읽기</button></div>';
+  };
+  let posT = null;
+  const trackPos = () => {
+    const r = route(); if (r[0] !== 'learn' || !r[1] || !CH[r[1]]) return;
+    const hs = $$('.prose h2', main); let k = -1;
+    hs.forEach((h, i) => { if (h.getBoundingClientRect().top < 140) k = i; });
+    if (k >= 0 && S.pos[r[1]] !== k) { S.pos[r[1]] = k; clearTimeout(posT); posT = setTimeout(save, 600); }
+  };
+  const goTo = hid => {
+    const t = document.getElementById(hid); if (!t) return;
+    t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    t.tabIndex = -1; t.focus({ preventScroll: true });
+    t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash'); setTimeout(() => t.classList.remove('flash'), 1600);
+  };
+
   /* ── 찾기 ──────────────────────────────────────────── */
   // 장 제목, 소제목, 시험 직전에 볼 줄, 암기 카드에서 찾는다. 띄어쓰기와 대소문자는 가리지 않는다
   const plain = s => String(s).replace(/[`*=]/g, '');
@@ -564,7 +610,7 @@
       let n = 0;
       c.blocks.forEach(b => { if (b.t === 'h') { IDX.push({ id, kind: '소제목', text: plain(b.x), href: '#/learn/' + id + '/h-' + n }); n++; } });
       c.keys.forEach(k => IDX.push({ id, kind: '요약', text: plain(k), href: '#/learn/' + id + '/keys' }));
-      c.cards.forEach(k => IDX.push({ id, kind: '카드', text: plain(k.q), sub: plain(k.a), href: '#/learn/' + id + '/keys' }));
+      c.cards.forEach(k => IDX.push({ id, kind: '카드', text: plain(k.q), sub: plain(k.a), href: '#/cards/' + id }));
     });
     IDX.forEach(x => { x.n = norm(x.text + ' ' + (x.sub || '')); });
   };
@@ -622,15 +668,21 @@
       (next ? '<a class="next" href="#/learn/' + next + '"><small>다음 ' + NO[next] + ' →</small>' + esc(title(next)) + '</a>' : '<a class="next" href="#/exam"><small>다 읽었으면 →</small>모의고사</a>') + '</nav>';
     if (!c) { main.innerHTML = '<div class="empty">' + mascot('sleepy') + '<b>이 장은 아직 준비 중이에요</b></div>' + navH; return; }
     picks = {}; hn = 0;
+    const heads = c.blocks.filter(b => b.t === 'h').map(b => b.x);
     main.innerHTML =
       '<header class="chap-hero"><div class="crumb"><span class="nb">' + NO[id] + '</span><span class="chip">' + SUBJ[id].name + '</span><span class="chip">' + esc(PARTNAME[id]) + '</span></div>' +
       '<h1 class="page-title">' + esc(c.title) + '</h1><p class="lead">' + fmt(c.lead) + '</p>' +
-      '<p class="chap-meta"><span>' + I.clock + '읽기 ' + c.minutes + '분</span><span>' + I.pen + '문제 ' + c.quiz.length + '개</span><span>출제 비중 ' + stars(c.weight) + '</span></p></header>' +
+      '<p class="chap-meta">' + fsCtl() + '<span>' + I.clock + '읽기 ' + c.minutes + '분</span><span>' + I.pen + '문제 ' + c.quiz.length + '개</span><span>출제 비중 ' + stars(c.weight) + '</span></p></header>' +
       '<div class="goals"><h2 class="goals-t">이 장을 읽고 나면</h2><ol>' + c.goals.map(g => '<li>' + fmt(g) + '</li>').join('') + '</ol></div>' +
+      resumeBar(id, c) +
+      '<details class="toc"' + (innerWidth >= 700 ? ' open' : '') + '><summary>이 장 차례<span>' + heads.length + '개</span></summary><ol>' +
+      heads.map((x, k) => '<li><a href="#/learn/' + id + '/h-' + k + '" data-act="toc" data-h="h-' + k + '">' + esc(plain(x)) + '</a></li>').join('') +
+      '<li class="toc-end"><a href="#/learn/' + id + '/keys" data-act="toc" data-h="keys">시험 직전에 볼 것</a></li><li class="toc-end"><a href="#/learn/' + id + '/chapQuiz" data-act="toc" data-h="chapQuiz">바로 풀어 보기</a></li></ol></details>' +
       '<article class="prose">' + c.blocks.map(block).join('') + '</article>' +
-      '<section class="keys" id="keys"><h2>시험 직전에 볼 것</h2><ol>' + c.keys.map(k => '<li><span>' + fmt(k) + '</span></li>').join('') + '</ol></section>' +
+      '<section class="keys" id="keys"><h2>시험 직전에 볼 것</h2><ol>' + c.keys.map(k => '<li><span>' + fmt(k) + '</span></li>').join('') + '</ol>' +
+      '<a class="keys-cards" href="#/cards/' + id + '">' + I.cards + '이 장 암기 카드 ' + c.cards.length + '장 넘겨 보기' + I.arrow + '</a></section>' +
       '<div class="quiz-head"><h2>바로 풀어 보기</h2><small>' + c.quiz.length + '문제예요. 고르면 바로 해설이 나와요.</small></div>' +
-      '<div id="chapQuiz">' + c.quiz.map((q, n) => qCard(q, { n: n + 1, ctx: 'chap' })).join('') + '</div><div id="chapScore"></div>' +
+      '<div id="chapQuiz" tabindex="-1">' + c.quiz.map((q, n) => qCard(q, { n: n + 1, ctx: 'chap' })).join('') + '</div><div id="chapScore"></div>' +
       '<div class="chap-foot"><button class="btn lg ' + (S.done[id] ? '' : 'primary') + '" data-act="done" data-id="' + id + '">' + (S.done[id] ? '읽음 표시 풀기' : I.check + '다 읽었어요') + '</button>' +
       (next ? '<a class="btn lg" href="#/learn/' + next + '">다음 장 읽기' + I.arrow + '</a>' : '<a class="btn lg" href="#/exam">모의고사 풀기' + I.arrow + '</a>') + '</div>' + navH;
   };
@@ -809,29 +861,68 @@
   let deck = null;
   const allCards = () => { const a = []; ORDER.forEach(id => { if (CH[id]) CH[id].cards.forEach((c, i) => a.push({ id: id + ':' + i, ch: id, q: c.q, a: c.a })); }); return a; };
   const buildDeck = f => {
-    const cards = allCards().filter(c => f === 'all' || (f === 'dont' ? S.cards[c.id] === 0 : f === 'new' ? S.cards[c.id] === undefined : SUBJ[c.ch].id === f));
-    deck = { f, cards: shuffle(cards), i: 0, flip: false, know: 0, total: cards.length };
+    const cards = allCards().filter(c => f === 'all' || (f === 'dont' ? S.cards[c.id] === 0 : f === 'new' ? S.cards[c.id] === undefined : f.startsWith('ch:') ? c.ch === f.slice(3) : SUBJ[c.ch].id === f));
+    deck = { f, cards: f.startsWith('ch:') ? cards : shuffle(cards), i: 0, flip: false, know: 0, dont: 0, total: cards.length, hist: [] };
   };
-  const viewCards = anim => {
+  const viewCards = chId => {
     main.className = '';
+    if (chId && CH[chId] && (!deck || deck.f !== 'ch:' + chId)) buildDeck('ch:' + chId);
     if (!deck) buildDeck('all');
     const all = allCards(), dont = all.filter(c => S.cards[c.id] === 0).length, fresh = all.filter(c => S.cards[c.id] === undefined).length;
     const chip = (f, label) => '<button data-act="deck" data-f="' + f + '" aria-pressed="' + (deck.f === f) + '"' + (deck.f === f ? ' class="on"' : '') + '>' + label + '</button>';
     let h = '<div class="fc-wrap"><div class="page-head" style="margin-bottom:14px"><h1 class="page-title">암기 카드</h1></div><div class="chips">' +
-      chip('all', '전체 ' + all.length) + chip('s1', '1과목') + chip('s2', '2과목') + chip('new', '안 본 것 ' + fresh) + chip('dont', '모르는 것 ' + dont) + '</div>';
+      chip('all', '전체 ' + all.length) + chip('s1', '1과목') + chip('s2', '2과목') + chip('new', '안 본 것 ' + fresh) + chip('dont', '모르는 것 ' + dont) + '</div>' +
+      '<label class="ch-pick"><span>장 하나만</span><select data-act-change="deck-ch" aria-label="장 하나만 보기"><option value="">고르기</option>' +
+      ORDER.filter(id => CH[id]).map(id => '<option value="' + id + '"' + (deck.f === 'ch:' + id ? ' selected' : '') + '>' + NO[id] + ' ' + esc(title(id)) + ' (' + CH[id].cards.length + ')</option>').join('') + '</select></label>';
     const c = deck.cards[deck.i];
     if (!c) {
       h += '<div class="empty">' + mascot(deck.total ? 'cheer' : 'sleepy', 'bob') + '<b>' + (deck.total ? '한 바퀴 돌았어요' : '카드가 없어요') + '</b>' + (deck.total ? deck.total + '장 중 ' + deck.know + '장을 알고 있어요.' : '') +
         '<div class="row" style="justify-content:center;margin-top:18px">' + (dont ? '<button class="btn primary" data-act="deck" data-f="dont">모르는 것만 다시 보기</button>' : '') + '<button class="btn" data-act="deck" data-f="' + deck.f + '">다시 섞기</button></div></div>';
     } else {
       h += '<div class="sess-top" style="position:static;grid-template-columns:1fr auto"><div class="bar"><i style="width:' + (deck.i / deck.cards.length * 100) + '%"></i></div><span class="cnt">' + (deck.i + 1) + ' / ' + deck.cards.length + '</span></div>' +
+        '<div class="fc-tally"><span class="k-ok">알았어요 ' + deck.know + '</span><span class="k-no">몰랐어요 ' + deck.dont + '</span>' + (deck.hist.length ? '<button class="link-btn" data-act="card-undo">방금 것 되돌리기</button>' : '') + '</div>' +
         '<div class="fc-stack"><button class="fc' + (deck.flip ? ' flip' : '') + '" data-act="flip" aria-pressed="' + deck.flip + '">' +
         '<div class="face front"' + (deck.flip ? ' aria-hidden="true"' : '') + '><span class="side-lbl">' + NO[c.ch] + ' ' + esc(title(c.ch)) + '</span><div>' + fmt(c.q) + '</div><span class="hint">답을 떠올린 다음 눌러서 뒤집어요</span></div>' +
         '<div class="face back"' + (deck.flip ? '' : ' aria-hidden="true"') + '><span class="side-lbl">답</span><div>' + fmt(c.a) + '</div></div></button></div>' +
         '<div class="fc-btns"><button class="btn lg" data-act="card" data-v="0"' + (deck.flip ? '' : ' disabled') + '>' + I.x + '몰랐어요</button><button class="btn ok lg" data-act="card" data-v="1"' + (deck.flip ? '' : ' disabled') + '>' + I.check + '알았어요</button></div>' +
-        '<div class="kbd-hint"><kbd>Space</kbd> 뒤집기, <kbd>←</kbd> 몰랐어요, <kbd>→</kbd> 알았어요</div>';
+        '<a class="fc-src" href="#/learn/' + c.ch + '/keys">' + NO[c.ch] + ' ' + esc(title(c.ch)) + ' 다시 읽기' + I.arrow + '</a>' +
+        '<div class="kbd-hint"><kbd>Space</kbd> 뒤집기, <kbd>←</kbd> 몰랐어요, <kbd>→</kbd> 알았어요, 휴대폰은 뒤집은 다음 옆으로 밀어도 돼요</div>';
     }
     main.innerHTML = h + '</div>';
+    fitCard(); swipeCard();
+  };
+  // 카드 높이를 앞뒤 중 긴 쪽에 맞춘다. 긴 답이 잘리거나 카드 안에서 스크롤되지 않게
+  const fitCard = () => {
+    const f = $('.fc'); if (!f) return;
+    const fr = $('.front', f), bk = $('.back', f);
+    f.style.height = 'auto';
+    const need = Math.max(fr.scrollHeight, bk.scrollHeight, innerWidth < 600 ? 260 : 300);
+    f.style.height = need + 'px';
+  };
+  // 뒤집은 다음 오른쪽으로 밀면 알았어요, 왼쪽이면 몰랐어요
+  const swipeCard = () => {
+    const st = $('.fc-stack'); if (!st) return;
+    let x0 = null, y0 = null;
+    st.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+    st.addEventListener('touchmove', e => {
+      if (x0 === null || !deck.flip) return;
+      const dx = e.touches[0].clientX - x0, dy = e.touches[0].clientY - y0;
+      if (Math.abs(dx) > Math.abs(dy)) { st.style.transform = 'translateX(' + dx * .6 + 'px) rotate(' + dx / 40 + 'deg)'; st.dataset.lean = dx > 30 ? 'r' : dx < -30 ? 'l' : ''; }
+    }, { passive: true });
+    st.addEventListener('touchend', e => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0; x0 = null;
+      st.style.transform = ''; st.dataset.lean = '';
+      if (deck.flip && Math.abs(dx) > 70) answerCard(dx > 0 ? 1 : 0);
+    }, { passive: true });
+  };
+  const undoCard = () => {
+    const last = deck.hist.pop(); if (!last) return;
+    if (last.prev === undefined) delete S.cards[last.id]; else S.cards[last.id] = last.prev;
+    if (last.v) deck.know--; else deck.dont--;
+    save(); deck.i--; deck.flip = true; viewCards();
+    const f = $('.fc'); if (f) { f.classList.add('flip'); }
+    toast('방금 카드를 되돌렸어요');
   };
   const flipCard = () => {
     deck.flip = !deck.flip;
@@ -845,7 +936,8 @@
   };
   const answerCard = v => {
     const c = deck.cards[deck.i]; if (!c || !deck.flip) return;
-    S.cards[c.id] = v; save(); if (v) deck.know++;
+    deck.hist.push({ id: c.id, prev: S.cards[c.id], v });
+    S.cards[c.id] = v; save(); if (v) deck.know++; else deck.dont++;
     const st = $('.fc-stack');
     const go = () => { deck.i++; deck.flip = false; viewCards(); };
     if (st && !reduce) { st.classList.add(v ? 'out-r' : 'out-l'); setTimeout(go, 260); } else go();
@@ -885,7 +977,7 @@
     if (r[0] === 'learn') { if (r[1]) viewChapter(r[1]); else viewLearnList(); }
     else if (r[0] === 'quiz') { if (r[1]) viewSess(r); else { sess = null; viewQuizHub(); } }
     else if (r[0] === 'exam') viewExam();
-    else if (r[0] === 'cards') viewCards();
+    else if (r[0] === 'cards') viewCards(r[1]);
     else if (r[0] === 'sheet') viewSheet();
     else viewHome();
     renderNav(); closeSide(); countUp(); markScroll();
@@ -909,6 +1001,7 @@
   addEventListener('hashchange', () => render());
 
   const onScroll = () => {
+    trackPos();
     const y = scrollY, bar = $('.readbar i'), r = route();
     $('.topbar').classList.toggle('scrolled', y > 4);
     if (r[0] === 'learn' && r[1]) { const h = document.documentElement.scrollHeight - innerHeight; bar.style.width = (h > 0 ? Math.min(100, y / h * 100) : 0) + '%'; }
@@ -949,6 +1042,11 @@
     else if (act === 'done') { const id = el.dataset.id; if (S.done[id]) delete S.done[id]; else { S.done[id] = true; burstFrom(el); } save(); render(true); }
     else if (act === 'day') { planDay = +el.dataset.i; render(true); }
     else if (act === 'theme') { const t = isDark() ? 'light' : 'dark'; document.documentElement.dataset.theme = t; try { localStorage.setItem('sqld.theme', t); } catch (x) {} renderNav(); }
+    else if (act === 'dp-ex') { dp.sel = el.dataset.d; dp.focus = dp.sel; const v = fromYmd(dp.sel); dp.view = new Date(v.getFullYear(), v.getMonth(), 1); dpPaint(false); }
+    else if (act === 'pick-exam') {
+      const x = examOf(el.dataset.d); S.examDate = el.dataset.d; S.start = today(); save(); planDay = null; render(true);
+      toast((x ? x.round + ', ' : '') + dateLabel(el.dataset.d) + '요일로 정했어요');
+    }
     else if (act === 'dp-pick') { dp.sel = el.dataset.d; dp.focus = el.dataset.d; dpPaint(true); }
     else if (act === 'dp-prev' || act === 'dp-next') dpMonth(act === 'dp-next' ? 1 : -1, false);
     else if (act === 'dp-close') closeDp();
@@ -956,6 +1054,7 @@
     else if (act === 'dp-save') {
       const changed = dp.sel !== examDate();
       if (dp.sel === META.examDate) delete S.examDate; else S.examDate = dp.sel;
+      if (changed) S.start = today();
       save(); planDay = null; closeDp(); render(true);
       if (changed) toast('시험 날짜를 ' + dateLabel(dp.sel) + '요일로 바꿨어요');
     }
@@ -974,7 +1073,7 @@
       gradeExam(); render(true); scrollTo(0, 0); focusTitle();
     }
     else if (act === 'scroll') { const t2 = document.getElementById('q-' + el.dataset.q); if (t2) t2.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); }
-    else if (act === 'deck') { buildDeck(el.dataset.f); viewCards(); }
+    else if (act === 'deck') { buildDeck(el.dataset.f); if (route()[1]) history.replaceState(null, '', '#/cards'); viewCards(); }
     else if (act === 'flip') flipCard();
     else if (act === 'card') answerCard(+el.dataset.v);
     else if (act === 'copy') {
@@ -984,6 +1083,9 @@
     }
     else if (act === 'print') print();
     else if (act === 'search') openSearch();
+    else if (act === 'toc') { ev.preventDefault(); goTo(el.dataset.h); const rb = el.closest('.resume'); if (rb) rb.remove(); }
+    else if (act === 'fs') { document.documentElement.dataset.fs = el.dataset.fs; try { localStorage.setItem('sqld.fs', el.dataset.fs); } catch (x) {} $$('.fs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.fs === el.dataset.fs)); }
+    else if (act === 'card-undo') undoCard();
     else if (act === 'sr-close') $('#search').close();
     else if (act === 'sr-go') { $('#search').close(); }
     else if (act === 'sr-try') { const inp = $('#search input'); inp.value = el.textContent; searchPaint(inp.value); inp.focus(); }
@@ -994,6 +1096,11 @@
   });
   // 휴대폰에서 닫힌 목차는 키보드와 화면 읽기 프로그램이 지나치게 한다
   const syncSide = () => { side.inert = innerWidth < 1040 && !side.classList.contains('open'); };
+  document.addEventListener('change', ev => {
+    const el = ev.target.closest('[data-act-change]'); if (!el) return;
+    if (el.dataset.actChange === 'deck-ch') { if (!el.value) { buildDeck('all'); history.replaceState(null, '', '#/cards'); } else { buildDeck('ch:' + el.value); history.replaceState(null, '', '#/cards/' + el.value); } viewCards(); }
+  });
+  addEventListener('resize', () => { if (route()[0] === 'cards') fitCard(); });
   $('#menuBtn').addEventListener('click', function () {
     const o = !side.classList.contains('open'); side.classList.toggle('open', o); scrim.hidden = !o; this.setAttribute('aria-expanded', o); syncSide();
     if (o) { const f = $('.nav-a.on', side) || $('a', side); if (f) setTimeout(() => f.focus(), 50); }

@@ -40,7 +40,7 @@
 <link rel="stylesheet" href="assets/style.css">
 <script>
   // 화면 깜빡임 없이 저장된 테마를 먼저 입힌다
-  try { var t = localStorage.getItem('sqld.theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  try { var t = localStorage.getItem('sqld.theme'); if (t) document.documentElement.dataset.theme = t; var f = localStorage.getItem('sqld.fs'); if (f) document.documentElement.dataset.fs = f; } catch (e) {}
 </script>
 </head>
 <body>

@@ -6,6 +6,16 @@ window.SQLD = window.SQLD || {
 
 SQLD.meta = {
   examDate: '2026-11-14',
+  // 시험 회차. sure 가 false 인 것은 공고 전이라 2026년 흐름(3월 첫째 주 토, 5월 마지막 일, 8월 셋째 토, 11월 둘째 토)으로 짐작한 날짜다.
+  // 공고가 나오면 날짜를 고치고 sure 를 true 로 바꾼다.
+  exams: [
+    { round: '제63회', date: '2026-11-14', sure: true },
+    { round: '제64회', date: '2027-03-06', sure: false },
+    { round: '제65회', date: '2027-05-30', sure: false },
+    { round: '제66회', date: '2027-08-21', sure: false },
+    { round: '제67회', date: '2027-11-13', sure: false }
+  ],
+  officialUrl: 'https://www.dataq.or.kr',
   subjects: [
     {
       id: 's1', name: '1과목', title: '데이터 모델링의 이해', count: 10,
