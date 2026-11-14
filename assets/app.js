@@ -1000,14 +1000,16 @@
       '<div class="giscus-box"><div class="giscus"></div><p class="giscus-wait">' + (navigator.onLine ? '댓글을 불러오고 있어요.' : '인터넷이 연결되면 댓글이 보여요.') + '</p></div></section>';
     paintEggs(); loadGiscus();
   };
-  const gTheme = () => isDark() ? 'noborder_dark' : 'noborder_light';
+  // 댓글 창 테마는 우리 색으로 만든 CSS 를 쓴다(assets/giscus-*.css). 파일로 열었을 때만 giscus 기본 테마
+  const themeBase = /^https?:/.test(location.protocol) ? new URL('assets/', location.href).href : '';
+  const gTheme = () => themeBase ? themeBase + (isDark() ? 'giscus-dark.css' : 'giscus-light.css') : (isDark() ? 'noborder_dark' : 'noborder_light');
   const loadGiscus = () => {
     if (!navigator.onLine) return;
     const box = $('.giscus', main); if (!box) return;
     const sc = document.createElement('script');
     sc.src = 'https://giscus.app/client.js'; sc.async = true; sc.crossOrigin = 'anonymous';
     const cfg = { repo: REPO, 'repo-id': 'R_kgDOVq0K4Q', category: 'Announcements', 'category-id': 'DIC_kwDOVq0K4c4DLIMq', mapping: 'specific', term: '세미콜론 평 남기기',
-      strict: '1', 'reactions-enabled': '1', 'emit-metadata': '0', 'input-position': 'top', theme: gTheme(), lang: 'ko', loading: 'lazy' };
+      strict: '1', 'reactions-enabled': '0', 'emit-metadata': '0', 'input-position': 'top', theme: gTheme(), lang: 'ko', loading: 'lazy' };
     Object.keys(cfg).forEach(k => sc.setAttribute('data-' + k, cfg[k]));
     box.appendChild(sc);
   };
