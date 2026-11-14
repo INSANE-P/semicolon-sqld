@@ -12,3 +12,46 @@ main .gsc-comment-box, main .gsc-comment > div { border-radius: 14px; }
 main .gsc-comment-box-tabs { border-radius: 12px 12px 0 0; }
 main .gsc-comment-reactions { display: none !important; }
 main .gsc-comment-footer { justify-content: flex-end; }
+main{--note-1:#3a3418;--note-2:#22305e;--note-3:#17393a;--note-4:#33285a;--note-ink:#eef1fa;--note-sub:#b0b8cf;--note-line:rgba(238,241,250,.22);--mark-img:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='22 8 20 46'%3E%3Ccircle cx='32' cy='16.5' r='7.4' fill='%23ffc93c'/%3E%3Cpath d='M24.6 35a7.4 7.4 0 1 1 14.8 0c0 7.4-3.7 12.6-9.9 15.8a1.7 1.7 0 0 1-2.2-.5l-.9-1.5a1.7 1.7 0 0 1 .4-2.2c2.5-1.8 4-3.7 4.7-5.4A7.4 7.4 0 0 1 24.6 35z' fill='%23ffc93c'/%3E%3C/svg%3E");--mark-op:.3;--tape:rgba(255,255,255,.22);--owner-bg:#4766ff}
+/* ── 남은 평: 메모지 보드 ── */
+main .gsc-timeline { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 22px 18px; align-items: start; padding: 18px 4px 8px; }
+main .gsc-timeline > .gsc-comment { margin: 0 !important; }
+main .gsc-timeline > .gsc-comment > div {
+  position: relative; display: flex; flex-direction: column; border: 0 !important; border-radius: 6px 6px 18px 6px !important;
+  background: var(--note-1) !important; color: var(--note-ink); padding: 18px 16px 12px;
+  box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 10px 22px -14px rgba(18,26,51,.45);
+  transform: rotate(-1.2deg); transition: transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s;
+}
+main .gsc-timeline > .gsc-comment:nth-child(4n+2) > div { background: var(--note-2) !important; transform: rotate(.9deg); }
+main .gsc-timeline > .gsc-comment:nth-child(4n+3) > div { background: var(--note-3) !important; transform: rotate(-.4deg); }
+main .gsc-timeline > .gsc-comment:nth-child(4n) > div { background: var(--note-4) !important; transform: rotate(1.4deg); }
+main .gsc-timeline > .gsc-comment > div:hover { transform: rotate(0) translateY(-4px); box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 18px 30px -16px rgba(18,26,51,.55); }
+/* 테이프 */
+main .gsc-timeline > .gsc-comment > div::before { content: ""; position: absolute; top: -10px; left: 50%; width: 70px; height: 20px; margin-left: -35px; background: var(--tape); transform: rotate(-3deg); border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+/* 구석의 세미콜론 */
+main .gsc-timeline > .gsc-comment > div::after { content: ""; position: absolute; right: 14px; top: 14px; width: 18px; height: 40px; background: var(--mark-img) no-repeat center / contain; opacity: var(--mark-op); pointer-events: none; z-index: 0; }
+main .gsc-timeline > .gsc-comment > div > * { position: relative; z-index: 1; }
+main .gsc-timeline .gsc-comment-content { padding-right: 30px !important; }
+/* 글이 먼저, 이름은 아래에 작게 */
+main .gsc-timeline .gsc-comment-content { order: 1; padding: 0 !important; font-size: 16px; line-height: 1.7; font-weight: 550; min-height: 52px; color: var(--note-ink); }
+main .gsc-timeline .gsc-comment-content p { margin: 0 0 6px; }
+main .gsc-timeline .gsc-comment-header { order: 2; padding: 10px 0 0 !important; margin-top: 6px; border-top: 1px dashed var(--note-line); background: none !important; font-size: 12.5px; }
+main .gsc-timeline .gsc-comment-author img { width: 22px; height: 22px; box-shadow: 0 0 0 2px var(--note-1); }
+main .gsc-timeline .gsc-comment-author .link-primary { color: var(--note-ink) !important; font-weight: 700; }
+main .gsc-timeline .gsc-comment-author .link-secondary { color: var(--note-sub) !important; }
+main .gsc-timeline .gsc-comment-footer { order: 3; padding: 2px 0 0 !important; background: none !important; justify-content: flex-start !important; }
+main .gsc-timeline .gsc-comment-replies-count span { color: var(--note-sub) !important; }
+main .gsc-timeline .gsc-replies, main .gsc-timeline .gsc-reply-box { order: 4; background: transparent !important; border-color: var(--note-line) !important; }
+main .gsc-timeline .gsc-replies .gsc-comment > div { background: rgba(255,255,255,.35) !important; border-radius: 10px !important; }
+/* 만든 사람 평: 파란 메모지와 꼬리표 */
+main .gsc-timeline > .gsc-comment:has(.color-box-border-info) > div { background: var(--owner-bg) !important; color: #fff; }
+main .gsc-timeline > .gsc-comment:has(.color-box-border-info) .gsc-comment-content,
+main .gsc-timeline > .gsc-comment:has(.color-box-border-info) .gsc-comment-author .link-primary { color: #fff !important; }
+main .gsc-timeline > .gsc-comment:has(.color-box-border-info) .gsc-comment-author .link-secondary,
+main .gsc-timeline > .gsc-comment:has(.color-box-border-info) .gsc-comment-replies-count span { color: rgba(255,255,255,.8) !important; }
+main .gsc-timeline > .gsc-comment:has(.color-box-border-info) .gsc-comment-header { border-top-color: rgba(255,255,255,.35); }
+main .gsc-timeline > .gsc-comment:has(.color-box-border-info) > div::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='22 8 20 46'%3E%3Ccircle cx='32' cy='16.5' r='7.4' fill='%23ffc93c'/%3E%3Cpath d='M24.6 35a7.4 7.4 0 1 1 14.8 0c0 7.4-3.7 12.6-9.9 15.8a1.7 1.7 0 0 1-2.2-.5l-.9-1.5a1.7 1.7 0 0 1 .4-2.2c2.5-1.8 4-3.7 4.7-5.4A7.4 7.4 0 0 1 24.6 35z' fill='%23ffc93c'/%3E%3C/svg%3E"); opacity: .7; }
+main .gsc-timeline .gsc-comment-author .color-box-border-info { display: none !important; }
+main .gsc-timeline > .gsc-comment:has(.color-box-border-info) .gsc-comment-author::after { content: "만든 사람"; margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: #ffc93c; color: #121a33; font-size: 11px; font-weight: 800; white-space: nowrap; }
+main .gsc-timeline > .gsc-comment:has(.color-box-border-info) .gsc-comment-author img { box-shadow: 0 0 0 2px #ffc93c; }
+@media (prefers-reduced-motion: reduce) { main .gsc-timeline > .gsc-comment > div { transition: none; } }
