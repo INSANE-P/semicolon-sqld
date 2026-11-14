@@ -996,9 +996,32 @@
       '<div class="about-links"><a class="btn" href="https://github.com/' + MAKER.login + '" target="_blank" rel="noopener">' + I.github + '깃허브 프로필</a>' +
       '<a class="btn" href="https://github.com/' + REPO + '" target="_blank" rel="noopener">' + I.github + '이 사이트 코드</a></div>' +
       '<div class="eggs" id="eggs" role="status"></div>' +
-      '<section class="sec talk"><div class="sec-head"><h2>평 남기기</h2><small>깃허브 계정으로 남길 수 있어요</small></div>' +
-      '<div class="giscus-box"><div class="giscus"></div><p class="giscus-wait">' + (navigator.onLine ? '댓글을 불러오고 있어요.' : '인터넷이 연결되면 댓글이 보여요.') + '</p></div></section>';
+      '<section class="sec talk"><div class="sec-head"><h2>평 남기기</h2><span class="talk-count" hidden></span><small class="talk-sub">' + (S.talked ? '남겨 준 평 잘 받았어요. 고마워요.' : '깃허브 계정으로 남길 수 있어요') + '</small></div>' +
+      '<div class="giscus-box"><div class="talk-pal" aria-hidden="true" data-act="pal"><span class="bubble"></span>' + mascot(S.talked ? 'cheer' : 'happy', 'peek') + '</div><div class="giscus"></div><p class="giscus-wait">' + (navigator.onLine ? '댓글을 불러오고 있어요.' : '인터넷이 연결되면 댓글이 보여요.') + '</p></div></section>';
+    talkBase = null;
     paintEggs(); loadGiscus();
+  };
+  // 평 개수와 올라온 순간
+  let talkBase = null;
+  const paintTalkCount = (n, bump) => {
+    const c = $('.talk-count'); if (!c) return;
+    c.hidden = false; c.textContent = '평 ' + n + '개';
+    if (bump) { c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); }
+  };
+  const palSay = (text, ms) => {
+    const pal = $('.talk-pal'); if (!pal) return;
+    const b = $('.bubble', pal); b.textContent = text; pal.classList.add('talking');
+    clearTimeout(palSay.t); palSay.t = setTimeout(() => pal.classList.remove('talking'), ms || 3500);
+  };
+  const celebrateTalk = n => {
+    S.talked = (S.talked || 0) + 1; save();
+    paintTalkCount(n, true);
+    const pal = $('.talk-pal');
+    if (pal) { pal.querySelector('.mascot').outerHTML = mascot('cheer', 'jump'); }
+    palSay('고마워요; 잘 읽을게요', 5000);
+    const sub = $('.talk-sub'); if (sub) sub.textContent = '남겨 준 평 잘 받았어요. 고마워요.';
+    const box = $('.giscus-box'); if (box) { box.classList.remove('glow'); void box.offsetWidth; box.classList.add('glow'); burstFrom($('.talk-pal') || box); }
+    say('평이 올라갔어요. 고마워요.');
   };
   // 댓글 창 테마는 우리 색으로 만든 CSS 를 쓴다(assets/giscus-*.css). 파일로 열었을 때만 giscus 기본 테마
   const themeBase = /^https?:/.test(location.protocol) ? new URL('assets/', location.href).href : '';
@@ -1009,7 +1032,7 @@
     const sc = document.createElement('script');
     sc.src = 'https://giscus.app/client.js'; sc.async = true; sc.crossOrigin = 'anonymous';
     const cfg = { repo: REPO, 'repo-id': 'R_kgDOVq0K4Q', category: 'Announcements', 'category-id': 'DIC_kwDOVq0K4c4DLIMq', mapping: 'specific', term: '세미콜론 평 남기기',
-      strict: '1', 'reactions-enabled': '0', 'emit-metadata': '0', 'input-position': 'top', theme: gTheme(), lang: 'ko', loading: 'lazy' };
+      strict: '1', 'reactions-enabled': '0', 'emit-metadata': '1', 'input-position': 'top', theme: gTheme(), lang: 'ko', loading: 'lazy' };
     Object.keys(cfg).forEach(k => sc.setAttribute('data-' + k, cfg[k]));
     box.appendChild(sc);
   };
@@ -1018,6 +1041,14 @@
     const w = $('.giscus-wait'); if (w) w.remove();
     // 댓글 창을 아직 못 쓰면 빈 칸 대신 다른 길을 알려 준다
     const g = e.data && e.data.giscus;
+    // 평 수: 처음 받은 수를 기준으로 두고, 늘어나면 방금 올라온 것
+    if (g && g.discussion && typeof g.discussion.totalCommentCount === 'number') {
+      const n = g.discussion.totalCommentCount + (g.discussion.totalReplyCount || 0);
+      if (talkBase === null) { talkBase = n; paintTalkCount(n); }
+      else if (n > talkBase) { talkBase = n; celebrateTalk(n); }
+      else { talkBase = n; paintTalkCount(n); }
+    }
+    if (g && g.error && /Discussion not found/i.test(g.error) && talkBase === null) { talkBase = 0; paintTalkCount(0); }
     if (g && g.error && !/Discussion not found/i.test(g.error)) {
       const box = $('.giscus-box'); if (box && !box.dataset.fallback) {
         box.dataset.fallback = '1';
@@ -1172,6 +1203,7 @@
     }
     else if (act === 'print') print();
     else if (act === 'search') openSearch();
+    else if (act === 'pal') palSay(S.talked ? '또 남겨 줘도 좋아요;' : '한 줄이면 충분해요;', 2600);
     else if (act === 'avatar') {
       avatarTaps++; clearTimeout(avatarT); avatarT = setTimeout(() => { avatarTaps = 0; }, 1400);
       if (avatarTaps >= 3) { avatarTaps = 0; el.classList.toggle('flip'); if (el.classList.contains('flip')) findEgg('avatar', '사실 저였어요;'); }

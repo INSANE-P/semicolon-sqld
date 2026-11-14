@@ -1051,3 +1051,20 @@ dialog.search::backdrop { background: rgba(8, 12, 30, .45); }
 .sr-item.egg .nb { background: var(--brand); color: var(--sun); font-family: var(--display); font-size: 15px; }
 .mascot.spin { animation: spin .6s var(--spring); }
 @keyframes spin { 0% { transform: rotate(0) scale(1); } 50% { transform: rotate(-14deg) scale(1.12); } 100% { transform: rotate(0) scale(1); } }
+
+/* ── 평 남기기 연출 ─────────────────────── */
+.talk .sec-head { align-items: center; }
+.talk-count { font-family: var(--display); font-size: 13px; padding: 3px 10px 2px; border-radius: 999px; background: var(--brand-50); color: var(--brand-ink); }
+.talk-count.bump { animation: bump .6s var(--spring); }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.35); background: var(--sun); color: #121a33; } 100% { transform: scale(1); } }
+.giscus-box { position: relative; margin-top: 46px; }
+.giscus-box.glow { animation: glow 1.6s var(--ease); }
+@keyframes glow { 0%, 30% { box-shadow: 0 0 0 4px var(--sun), var(--sh-2); } 100% { box-shadow: var(--sh-1); } }
+.talk-pal { position: absolute; right: 22px; top: -44px; display: flex; align-items: flex-end; gap: 8px; cursor: pointer; z-index: 2; }
+.talk-pal .mascot { width: 42px; height: auto; }
+.mascot.peek { animation: peek 3.6s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes peek { 0%, 70%, 100% { transform: translateY(0); } 78% { transform: translateY(-6px) rotate(-6deg); } 86% { transform: translateY(0) rotate(4deg); } }
+.mascot.jump { animation: hop .7s var(--spring) 2; }
+.talk-pal .bubble { position: relative; margin-bottom: 18px; padding: 7px 12px; border-radius: 14px 14px 4px 14px; background: var(--ink); color: var(--bg); font-size: 13px; font-weight: 700; white-space: nowrap; opacity: 0; transform: translateY(6px) scale(.9); transform-origin: 100% 100%; transition: opacity .2s, transform .25s var(--spring); pointer-events: none; }
+.talk-pal.talking .bubble { opacity: 1; transform: none; }
+@media (max-width: 600px) { .talk-pal { right: 12px; } .talk .sec-head small { flex-basis: 100%; } }
