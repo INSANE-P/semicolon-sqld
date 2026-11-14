@@ -49,7 +49,7 @@ SQL 문장 끝에 붙는 세미콜론(;)에서 따온 이름이에요.
 
 설명과 문제는 SQLD 출제 범위를 기준으로 새로 썼어요. 모든 문제는 다른 사람이 답을 가리고 처음부터 다시 풀어 정답을 맞춰 봤어요. SQL 은 Oracle 기준이고, SQL Server 와 다르게 동작하는 곳은 본문에서 따로 짚었어요.
 
-틀린 설명이나 답이 이상한 문제를 찾으면 [이슈](https://github.com/INSANE-P/semicolon-sqld/issues)로 알려 주세요.
+틀린 설명이나 답이 이상한 문제를 찾으면 사이트의 "만든 사람" 페이지 아래 평 남기기나 [이슈](https://github.com/INSANE-P/semicolon-sqld/issues)로 알려 주세요.
 
 <details>
 <summary>고쳐서 쓰고 싶다면</summary>

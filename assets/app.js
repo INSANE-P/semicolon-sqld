@@ -26,7 +26,7 @@
   const KEY = 'sqld.v1';
   let S;
   try { S = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { S = {}; }
-  S.pos = S.pos || {}; S.done = S.done || {}; S.q = S.q || {}; S.cards = S.cards || {}; S.exams = S.exams || []; S.exam = S.exam || null;
+  S.pos = S.pos || {}; S.eggs = S.eggs || {}; S.done = S.done || {}; S.q = S.q || {}; S.cards = S.cards || {}; S.exams = S.exams || []; S.exam = S.exam || null;
   const ymd = d => d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   const today = () => ymd(new Date());
   if (!S.start) S.start = today();
@@ -116,6 +116,8 @@
     pin: ic('<path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v8"/>'),
     list: ic('<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>'),
     star: ic('<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>'),
+    github: '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>',
+    chat: ic('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A2.5 2.5 0 0 1 4 13.5z"/>'),
     zoom: ic('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3M11 8.5v5M8.5 11h5"/>'),
     exam: ic('<rect x="5" y="4" width="14" height="17" rx="2.2"/><path d="M9 4V3h6v1M8.8 13l2.2 2.2 4.4-4.6"/>'),
     pie: ic('<path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12z"/><path d="M15 3.8a8.5 8.5 0 0 1 5.2 5.2H15z"/>'),
@@ -341,6 +343,7 @@
       });
       h += '</div>';
     });
+    h += '<a class="maker' + (sec === 'about' ? ' on" aria-current="page' : '') + '" href="#/about">' + I.github + '<span>만든 사람</span></a>';
     side.innerHTML = h;
     const tab = (href, icon, label, on, dot) => '<a href="' + href + '"' + (on ? ' class="on" aria-current="page"' : '') + '>' + icon + '<span>' + label + '</span>' + (dot ? '<i class="dot" role="img" aria-label="틀린 문제 있음"></i>' : '') + '</a>';
     tabs.innerHTML = tab('#/', I.cal, '오늘', sec === '') + tab('#/learn', I.book, '개념', sec === 'learn') +
@@ -545,7 +548,7 @@
       '<li>틀린 문제는 오답 노트에 모여요. 다시 맞히면 빠지고, 또 틀리면 남아요.</li>' +
       '<li>시간이 모자라면 별 세 개인 장부터 읽고, 나머지는 한 장 요약으로 훑어요.</li>' +
       '<li>합격선은 60점이에요. 1과목에서 4개, 2과목에서 16개보다 적게 맞히면 총점과 상관없이 떨어져요.</li></ol></details>';
-    h += '<p class="foot-note">공부 기록은 이 브라우저에만 저장돼요.<br><button class="link-btn" data-act="reset">기록 지우기</button></p>';
+    h += '<p class="foot-note">공부 기록은 이 브라우저에만 저장돼요.<br><button class="link-btn" data-act="reset">기록 지우기</button><span class="fn-gap"></span><a class="link-btn" href="#/about">만든 사람</a></p>';
     main.innerHTML = h;
   };
 
@@ -627,6 +630,11 @@
       $('.sr-count', d).textContent = ''; return;
     }
     const hits = IDX.filter(x => x.n.includes(nq)).sort((a, b) => KORDER[a.kind] - KORDER[b.kind]).slice(0, 40);
+    if ([';', '세미콜론', 'semicolon'].includes(nq)) {
+      $('.sr-count', d).textContent = '';
+      list.innerHTML = '<li><a class="sr-item egg" href="#/about" data-act="sr-egg" data-sel="1"><span class="nb">;</span><span class="sr-t"><b>찾았어요. 그게 이 사이트 이름이에요</b><small>누르면 만든 사람 페이지로 가요</small></span><span class="sr-k">숨은 것</span></a></li>';
+      return;
+    }
     $('.sr-count', d).textContent = hits.length ? hits.length + (hits.length === 40 ? '개 넘게' : '개') + ' 찾았어요' : '';
     list.innerHTML = hits.length ? hits.map((x, i) => '<li><a class="sr-item ' + tc(x.id) + '" href="' + x.href + '" data-act="sr-go"' + (i === 0 ? ' data-sel="1"' : '') + '>' +
       '<span class="nb">' + NO[x.id] + '</span><span class="sr-t"><b>' + hiQuery(x.text, q) + '</b>' + (x.sub ? '<small>' + hiQuery(x.sub, q) + '</small>' : '<small>' + esc(title(x.id)) + '</small>') + '</span><span class="sr-k">' + x.kind + '</span></a></li>').join('')
@@ -959,6 +967,76 @@
     main.innerHTML = h;
   };
 
+  /* ── 만든 사람 ─────────────────────────────────────── */
+  const MAKER = { name: '박찬빈', login: 'INSANE-P', avatar: 'https://avatars.githubusercontent.com/u/193213487?v=4' };
+  const REPO = 'INSANE-P/semicolon-sqld';
+  const EGGS = [['tap', '첫 화면 친구'], ['konami', '오래된 주문'], ['search', '이름 찾기'], ['avatar', '얼굴 바꾸기']];
+  const findEgg = (k, msg) => {
+    const first = !S.eggs[k]; S.eggs[k] = 1; save();
+    confetti(null, innerHeight * .35, first ? 140 : 60);
+    toast(msg + (first ? ' (숨은 것 ' + Object.keys(S.eggs).length + '/' + EGGS.length + ')' : ''));
+    if (route()[0] === 'about') paintEggs();
+  };
+  const paintEggs = () => {
+    const el = $('#eggs'); if (!el) return;
+    const n = EGGS.filter(([k]) => S.eggs[k]).length;
+    el.innerHTML = '<span class="eg-dots" aria-hidden="true">' + EGGS.map(([k]) => '<i' + (S.eggs[k] ? ' class="on"' : '') + '></i>').join('') + '</span>' +
+      '<span>' + (n === EGGS.length ? '숨은 것을 다 찾았어요. 고마워요.' : '이 사이트에 숨은 것이 ' + EGGS.length + '개 있어요. 지금까지 ' + n + '개 찾았어요.') + '</span>' +
+      (n ? '<ul>' + EGGS.filter(([k]) => S.eggs[k]).map(([, name]) => '<li>' + name + '</li>').join('') + '</ul>' : '');
+  };
+  let avatarTaps = 0, avatarT = null;
+  const viewAbout = () => {
+    main.className = '';
+    main.innerHTML =
+      '<header class="about-head"><button class="about-ava" data-act="avatar" aria-label="' + MAKER.name + ' 프로필 사진"><img src="' + MAKER.avatar + '" alt="" width="96" height="96" loading="lazy" referrerpolicy="no-referrer">' + mascot('cheer') + '</button>' +
+      '<div><p class="about-k">만든 사람</p><h1 class="page-title">' + MAKER.name + '</h1>' +
+      '<a class="about-gh" href="https://github.com/' + MAKER.login + '" target="_blank" rel="noopener">' + I.github + '@' + MAKER.login + '</a></div></header>' +
+      '<div class="about-body"><p>SQLD 시험을 며칠 앞두고 정리할 곳이 필요해서 만들었어요. 장을 읽고 바로 풀어 보고, 틀린 것만 다시 보는 데 맞춰 화면을 짰어요.</p>' +
+      '<p>틀린 설명이나 답이 이상한 문제를 찾으면 아래에 남겨 주세요. 고쳐서 다시 올릴게요.</p></div>' +
+      '<div class="about-links"><a class="btn" href="https://github.com/' + MAKER.login + '" target="_blank" rel="noopener">' + I.github + '깃허브 프로필</a>' +
+      '<a class="btn" href="https://github.com/' + REPO + '" target="_blank" rel="noopener">' + I.github + '이 사이트 코드</a></div>' +
+      '<div class="eggs" id="eggs" role="status"></div>' +
+      '<section class="sec talk"><div class="sec-head"><h2>평 남기기</h2><small>깃허브 계정으로 남길 수 있어요</small></div>' +
+      '<div class="giscus-box"><div class="giscus"></div><p class="giscus-wait">' + (navigator.onLine ? '댓글을 불러오고 있어요.' : '인터넷이 연결되면 댓글이 보여요.') + '</p></div></section>';
+    paintEggs(); loadGiscus();
+  };
+  const gTheme = () => isDark() ? 'noborder_dark' : 'noborder_light';
+  const loadGiscus = () => {
+    if (!navigator.onLine) return;
+    const box = $('.giscus', main); if (!box) return;
+    const sc = document.createElement('script');
+    sc.src = 'https://giscus.app/client.js'; sc.async = true; sc.crossOrigin = 'anonymous';
+    const cfg = { repo: REPO, 'repo-id': 'R_kgDOVq0K4Q', category: 'Announcements', 'category-id': 'DIC_kwDOVq0K4c4DLIMq', mapping: 'specific', term: '세미콜론 평 남기기',
+      strict: '1', 'reactions-enabled': '1', 'emit-metadata': '0', 'input-position': 'top', theme: gTheme(), lang: 'ko', loading: 'lazy' };
+    Object.keys(cfg).forEach(k => sc.setAttribute('data-' + k, cfg[k]));
+    box.appendChild(sc);
+  };
+  addEventListener('message', e => {
+    if (e.origin !== 'https://giscus.app') return;
+    const w = $('.giscus-wait'); if (w) w.remove();
+  });
+  const giscusTheme = () => { const f = document.querySelector('iframe.giscus-frame'); if (f) f.contentWindow.postMessage({ giscus: { setConfig: { theme: gTheme() } } }, 'https://giscus.app'); };
+
+  // 숨은 것 1: 첫 화면 마스코트를 다섯 번 빠르게 누르기
+  let taps = 0, tapT = null;
+  document.addEventListener('click', e => {
+    const a = e.target.closest('.hero-art'); if (!a) return;
+    taps++; clearTimeout(tapT); tapT = setTimeout(() => { taps = 0; }, 1400);
+    const m = $('.mascot', a); if (m) { m.classList.remove('spin'); void m.getBoundingClientRect(); m.classList.add('spin'); }
+    if (taps >= 5) { taps = 0; findEgg('tap', '간지러워요;'); }
+  });
+  // 숨은 것 2: 키보드로 위 위 아래 아래 왼 오 왼 오 B A
+  const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+  let kpos = 0;
+  document.addEventListener('keydown', e => {
+    if (e.target.matches && e.target.matches('input, textarea, select')) return;
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    kpos = k === KONAMI[kpos] ? kpos + 1 : (k === KONAMI[0] ? 1 : 0);
+    if (kpos === KONAMI.length) { kpos = 0; findEgg('konami', 'COMMIT; 오늘 공부한 건 되돌릴 수 없어요'); }
+  });
+  // 개발자 도구를 연 사람에게
+  try { console.log('%c;%c 세미콜론 코드는 여기 있어요: https://github.com/' + REPO, 'background:#3b5bfd;color:#ffc93c;font:900 20px sans-serif;padding:2px 10px;border-radius:6px', 'font:14px sans-serif'); } catch (x) {}
+
   /* ── 길 찾기 ───────────────────────────────────────── */
   let toastT;
   const focusTitle = () => { const h = $('h1', main); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } };
@@ -979,6 +1057,7 @@
     else if (r[0] === 'exam') viewExam();
     else if (r[0] === 'cards') viewCards(r[1]);
     else if (r[0] === 'sheet') viewSheet();
+    else if (r[0] === 'about') viewAbout();
     else viewHome();
     renderNav(); closeSide(); countUp(); markScroll();
     const moved = lastHash !== location.hash;
@@ -990,7 +1069,7 @@
       // 화면이 바뀌면 새 화면의 제목으로 초점을 옮겨 어디에 왔는지 읽히게 한다
       if (!first) { const h1 = $('h1', main) || main; h1.tabIndex = -1; h1.focus({ preventScroll: true }); }
     }
-    document.title = (r[0] === 'learn' && r[1] ? title(r[1]) + ' | ' : '') + '세미콜론';
+    document.title = (r[0] === 'learn' && r[1] ? title(r[1]) + ' | ' : r[0] === 'about' ? '만든 사람 | ' : '') + '세미콜론';
     // 찾기에서 소제목이나 요약으로 들어오면 그 자리로 간다
     if (r[0] === 'learn' && r[2]) {
       const target = document.getElementById(r[2]);
@@ -1041,7 +1120,7 @@
     else if (act === 'again') { sess = null; render(true); scrollTo(0, 0); focusTitle(); }
     else if (act === 'done') { const id = el.dataset.id; if (S.done[id]) delete S.done[id]; else { S.done[id] = true; burstFrom(el); } save(); render(true); }
     else if (act === 'day') { planDay = +el.dataset.i; render(true); }
-    else if (act === 'theme') { const t = isDark() ? 'light' : 'dark'; document.documentElement.dataset.theme = t; try { localStorage.setItem('sqld.theme', t); } catch (x) {} renderNav(); }
+    else if (act === 'theme') { const t = isDark() ? 'light' : 'dark'; document.documentElement.dataset.theme = t; try { localStorage.setItem('sqld.theme', t); } catch (x) {} renderNav(); giscusTheme(); }
     else if (act === 'dp-ex') { dp.sel = el.dataset.d; dp.focus = dp.sel; const v = fromYmd(dp.sel); dp.view = new Date(v.getFullYear(), v.getMonth(), 1); dpPaint(false); }
     else if (act === 'pick-exam') {
       const x = examOf(el.dataset.d); S.examDate = el.dataset.d; S.start = today(); save(); planDay = null; render(true);
@@ -1083,11 +1162,16 @@
     }
     else if (act === 'print') print();
     else if (act === 'search') openSearch();
+    else if (act === 'avatar') {
+      avatarTaps++; clearTimeout(avatarT); avatarT = setTimeout(() => { avatarTaps = 0; }, 1400);
+      if (avatarTaps >= 3) { avatarTaps = 0; el.classList.toggle('flip'); if (el.classList.contains('flip')) findEgg('avatar', '사실 저였어요;'); }
+    }
     else if (act === 'toc') { ev.preventDefault(); goTo(el.dataset.h); const rb = el.closest('.resume'); if (rb) rb.remove(); }
     else if (act === 'fs') { document.documentElement.dataset.fs = el.dataset.fs; try { localStorage.setItem('sqld.fs', el.dataset.fs); } catch (x) {} $$('.fs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.fs === el.dataset.fs)); }
     else if (act === 'card-undo') undoCard();
     else if (act === 'sr-close') $('#search').close();
     else if (act === 'sr-go') { $('#search').close(); }
+    else if (act === 'sr-egg') { $('#search').close(); setTimeout(() => findEgg('search', '이름을 찾았어요;'), 200); }
     else if (act === 'sr-try') { const inp = $('#search input'); inp.value = el.textContent; searchPaint(inp.value); inp.focus(); }
     else if (act === 'zoom') openZoom(el.closest('.fig'));
     else if (act === 'lb-close') $('#lightbox').close();
