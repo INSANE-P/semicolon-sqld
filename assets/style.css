@@ -1046,7 +1046,8 @@ dialog.search::backdrop { background: rgba(8, 12, 30, .45); }
 .eggs .eg-dots i.on { background: var(--sun); border-color: var(--sun-deep); }
 .eggs ul { margin: 0; padding-left: 1.1em; }
 .giscus-box { border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); padding: 12px 14px; min-height: 120px; box-shadow: var(--sh-1); }
-.giscus-wait { margin: 10px 4px; color: var(--ink-3); font-size: 14px; }
+.giscus-wait { margin: 10px 4px; color: var(--ink-2); font-size: 14px; line-height: 1.7; }
+.giscus-wait a { color: var(--brand-ink); font-weight: 700; }
 .sr-item.egg .nb { background: var(--brand); color: var(--sun); font-family: var(--display); font-size: 15px; }
 .mascot.spin { animation: spin .6s var(--spring); }
 @keyframes spin { 0% { transform: rotate(0) scale(1); } 50% { transform: rotate(-14deg) scale(1.12); } 100% { transform: rotate(0) scale(1); } }

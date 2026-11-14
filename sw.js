@@ -1,6 +1,6 @@
 // 한 번 열어 두면 인터넷 없이도 열리게 한다.
 // 온라인이면 새 파일을 먼저 받고(내용이 고쳐지면 바로 반영), 끊기면 저장해 둔 것을 쓴다.
-const CACHE = 'semicolon-v8';
+const CACHE = 'semicolon-v9';
 const IDS = ['_meta', 'm1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm8', 'm9', 'm10',
   'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'q11', 'q12', 'q13', 'q14', 'q15', 'q16', 'q17', 'q18', 'q19', 'q20'];
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'assets/style.css', 'assets/app.js',

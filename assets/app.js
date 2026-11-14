@@ -1014,6 +1014,14 @@
   addEventListener('message', e => {
     if (e.origin !== 'https://giscus.app') return;
     const w = $('.giscus-wait'); if (w) w.remove();
+    // 댓글 창을 아직 못 쓰면 빈 칸 대신 다른 길을 알려 준다
+    const g = e.data && e.data.giscus;
+    if (g && g.error && !/Discussion not found/i.test(g.error)) {
+      const box = $('.giscus-box'); if (box && !box.dataset.fallback) {
+        box.dataset.fallback = '1';
+        box.innerHTML = '<p class="giscus-wait">평 남기기 칸을 준비하고 있어요. 그동안은 <a href="https://github.com/' + REPO + '/issues/new" target="_blank" rel="noopener">깃허브 이슈</a>로 남겨 주세요.</p>';
+      }
+    }
   });
   const giscusTheme = () => { const f = document.querySelector('iframe.giscus-frame'); if (f) f.contentWindow.postMessage({ giscus: { setConfig: { theme: gTheme() } } }, 'https://giscus.app'); };
 
