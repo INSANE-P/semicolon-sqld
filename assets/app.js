@@ -1,4 +1,4 @@
-/* 세미콜론 — 화면. 빌드 없이 file:// 에서도 돈다. */
+/* 세미콜론 화면. 빌드 없이 file:// 에서도 돈다. */
 (function () {
   'use strict';
   const META = SQLD.meta, CH = SQLD.chapters;
@@ -79,9 +79,9 @@
   let codeStore = [];
   const sqlBox = (code, result, note) => {
     const ci = codeStore.push(code) - 1;
-    return '<div class="sql"><div class="sql-top"><span class="dots"><i></i><i></i><i></i></span><span class="lang">SQL</span>' +
+    return '<div class="sql"><div class="sql-top"><span class="lang">SQL</span>' +
       '<button class="copy" data-act="copy" data-c="' + ci + '" aria-label="SQL 복사">복사</button></div><pre>' + hlLines(code) + '</pre>' +
-      (result ? '<div class="res"><div class="lbl">' + I.check + '결과</div><br>' + grid(result) + '</div>' : '') +
+      (result ? '<div class="res"><div class="lbl">실행 결과</div>' + grid(result) + '</div>' : '') +
       (note ? '<div class="note">' + fmt(note) + '</div>' : '') + '</div>';
   };
   // 출제 비중 별. 글자 대신 그림으로 그리고 뜻은 이름으로 읽어 준다
@@ -117,6 +117,17 @@
     list: ic('<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>'),
     star: ic('<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>'),
     zoom: ic('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3M11 8.5v5M8.5 11h5"/>'),
+    exam: ic('<rect x="5" y="4" width="14" height="17" rx="2.2"/><path d="M9 4V3h6v1M8.8 13l2.2 2.2 4.4-4.6"/>'),
+    pie: ic('<path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12z"/><path d="M15 3.8a8.5 8.5 0 0 1 5.2 5.2H15z"/>'),
+    goals: ic('<path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5 2.5-2.5M3.5 18l1.5 1.5 2.5-2.5"/>'),
+    skip: ic('<circle cx="12" cy="12" r="8.5"/><path d="M8 12h8"/>'),
+    print: ic('<path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/>'),
+    bookmark: ic('<path d="M6.5 3.5h11v17L12 16.5l-5.5 4z"/>'),
+    grid: ic('<rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/>'),
+    cal: ic('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8.6 14.8l2.2 2.2 4.4-4.4"/>'),
+    calEdit: ic('<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h3M8 17h6"/>'),
+    left: ic('<path d="M15 5l-7 7 7 7"/>', 2.4),
+    right: ic('<path d="M9 5l7 7-7 7"/>', 2.4),
     sparkle: ic('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>')
   };
   const MARK = '<svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect y="5" width="64" height="59" rx="17" fill="#2238c9"/><rect width="64" height="59" rx="17" fill="#3b5bfd"/>' +
@@ -211,6 +222,7 @@
       d.innerHTML = '<div class="lb-top"><p class="lb-cap"></p><button class="icon-btn" data-act="lb-close" aria-label="닫기">' + I.x + '</button></div>' +
         '<div class="lb-body" tabindex="0" role="group" aria-label="그림"></div><p class="lb-hint">옆으로 밀거나 두 손가락으로 키워 보세요. 휴대폰을 가로로 돌리면 더 크게 보여요.</p>';
       d.addEventListener('click', e => { if (e.target === d) d.close(); });
+      d.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); d.close(); } });
       document.body.appendChild(d);
     }
     const svg = $('svg', fig).cloneNode(true);
@@ -231,7 +243,7 @@
   /* ── 본문 블록 ─────────────────────────────────────── */
   const block = b => {
     switch (b.t) {
-      case 'h': return '<h2>' + fmt(b.x) + '</h2>';
+      case 'h': return '<h2 id="h-' + (hn++) + '">' + fmt(b.x) + '</h2>';
       case 'p': return '<p>' + fmt(b.x) + '</p>';
       case 'ul': case 'ol': return '<' + b.t + '>' + b.items.map(i => '<li>' + fmt(i) + '</li>').join('') + '</' + b.t + '>';
       case 'table': {
@@ -273,7 +285,7 @@
       return '<li><button class="' + cls + '" data-act="pick" data-q="' + q.id + '" data-i="' + n + '"' + (reveal ? ' disabled' : '') + '><span class="cn">' + n + '</span>' + body + '</button></li>';
     }).join('') + '</ol>';
     if (reveal && o.ctx !== 'sess') {
-      const v = !o.picked ? ['skip', '안 푼 문제예요 · 정답 ' + CN[q.answer], I.target] : ok ? ['ok', '맞았어요', I.check] : ['no', '아쉬워요 · 정답은 ' + CN[q.answer], I.x];
+      const v = !o.picked ? ['skip', '안 푼 문제예요. 정답은 ' + CN[q.answer], I.skip] : ok ? ['ok', '맞았어요', I.check] : ['no', '틀렸어요. 정답은 ' + CN[q.answer], I.x];
       h += '<div class="why"><div class="verdict ' + v[0] + '">' + v[2] + v[1] + '</div>' + fmt(q.why) +
         (o.showChap ? '<br><a href="#/learn/' + cid + '">' + NO[cid] + ' ' + esc(title(cid)) + ' 다시 읽기 →</a>' : '') + '</div>';
     }
@@ -311,18 +323,19 @@
     const link = (href, icon, label, on, extra) => '<a class="nav-a' + (on ? ' on" aria-current="page' : '') + '" href="' + href + '">' + icon + '<span>' + label + '</span>' + (extra || '') + '</a>';
     let h = '<div class="side-top">' + brandHTML(true) +
       '<button class="icon-btn" data-act="theme" aria-label="밝은 화면과 어두운 화면 바꾸기">' + (isDark() ? I.sun : I.moon) + '</button></div>' +
+      '<button class="find" data-act="search" aria-haspopup="dialog"><span>' + I.zoom + '개념 찾기</span><kbd aria-hidden="true">/</kbd></button>' +
       '<a class="side-dday" href="#/"><small>SQLD 시험 ' + dateLabel(examDate()) + '</small><b>' + (d > 0 ? 'D-' + d : d === 0 ? '오늘 시험' : '시험 끝') + '</b>' +
       '<div class="bar"><i style="width:' + Math.round(doneN / ORDER.length * 100) + '%"></i></div><div class="sd-row"><span>읽은 장</span><span>' + doneN + ' / ' + ORDER.length + '</span></div></a>' +
       '<div class="nav-main">' +
-      link('#/', I.home, '오늘 할 일', sec === '') +
+      link('#/', I.cal, '오늘 할 일', sec === '') +
       link('#/quiz', I.pen, '문제 풀기', sec === 'quiz' && cur !== 'wrong') +
-      link('#/exam', I.clock, '모의고사', sec === 'exam') +
+      link('#/exam', I.exam, '모의고사', sec === 'exam') +
       link('#/quiz/wrong', I.redo, '오답 노트', sec === 'quiz' && cur === 'wrong', wn ? '<span class="badge">' + wn + '</span>' : '') +
       link('#/cards', I.cards, '암기 카드', sec === 'cards') +
       link('#/sheet', I.sheet, '한 장 요약', sec === 'sheet') + '</div>';
     META.subjects.forEach(s => {
       const ids = s.parts.reduce((a, p) => a.concat(p.ids), []), dn = ids.filter(id => S.done[id]).length;
-      h += '<div class="nav-group"><h4>' + s.name + ' · ' + esc(s.title) + '<span class="gp">' + dn + '/' + ids.length + '</span></h4>';
+      h += '<div class="nav-group"><h4>' + s.name + ' ' + esc(s.title) + '<span class="gp">' + dn + '/' + ids.length + '</span></h4>';
       ids.forEach(id => {
         h += '<a class="nav-ch ' + tc(id) + (sec === 'learn' && cur === id ? ' on" aria-current="page' : '') + '" href="#/learn/' + id + '"><span class="nb">' + NO[id] + '</span><span>' + esc(title(id)) + (S.done[id] ? '<span class="sr">, 읽음</span>' : '') + '</span><span class="ck' + (S.done[id] ? ' done' : '') + '" aria-hidden="true"></span></a>';
       });
@@ -330,7 +343,7 @@
     });
     side.innerHTML = h;
     const tab = (href, icon, label, on, dot) => '<a href="' + href + '"' + (on ? ' class="on" aria-current="page"' : '') + '>' + icon + '<span>' + label + '</span>' + (dot ? '<i class="dot" role="img" aria-label="틀린 문제 있음"></i>' : '') + '</a>';
-    tabs.innerHTML = tab('#/', I.home, '오늘', sec === '') + tab('#/learn', I.book, '개념', sec === 'learn') +
+    tabs.innerHTML = tab('#/', I.cal, '오늘', sec === '') + tab('#/learn', I.book, '개념', sec === 'learn') +
       tab('#/quiz', I.pen, '문제', sec === 'quiz' || sec === 'exam', wn > 0) + tab('#/cards', I.cards, '카드', sec === 'cards') + tab('#/sheet', I.sheet, '요약', sec === 'sheet');
     $('#ddayTop').innerHTML = '시험 <b>' + dLabel(d) + '</b>';
     $('#brandTop').innerHTML = brandHTML(false);
@@ -357,6 +370,94 @@
   addEventListener('appinstalled', () => { installEvt = null; toast('설치했어요. 홈 화면에서 열 수 있어요'); });
   if ('serviceWorker' in navigator && location.protocol !== 'file:') addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 
+  /* ── 시험 날짜 고르기(달력) ──────────────────────────── */
+  // 휴대폰은 아래에서 올라오는 판, 책상은 가운데 작은 창. 오늘 전 날짜는 고를 수 없다
+  const dp = { sel: null, view: null, focus: null, back: null };
+  const pad2 = n => ('0' + n).slice(-2);
+  const fromYmd = d => new Date(d + 'T00:00:00');
+  const longLabel = d => { const x = fromYmd(d); return x.getFullYear() + '년 ' + (x.getMonth() + 1) + '월 ' + x.getDate() + '일 ' + WD[x.getDay()] + '요일'; };
+  const dpEl = () => {
+    let d = $('#datepick'); if (d) return d;
+    d = document.createElement('dialog'); d.id = 'datepick'; d.className = 'dp'; d.setAttribute('aria-labelledby', 'dpTitle');
+    d.innerHTML = '<div class="dp-grab" aria-hidden="true"></div>' +
+      '<div class="dp-head"><h2 id="dpTitle">시험 날짜</h2><button class="icon-btn" data-act="dp-close" aria-label="닫기">' + I.x + '</button></div>' +
+      '<div class="dp-sel" aria-live="polite"><b class="dp-day"></b><span class="dp-dd"></span></div>' +
+      '<div class="dp-nav"><button class="icon-btn" data-act="dp-prev" aria-label="이전 달">' + I.left + '</button><span class="dp-month" aria-live="polite"></span><button class="icon-btn" data-act="dp-next" aria-label="다음 달">' + I.right + '</button></div>' +
+      '<table class="dp-grid" role="grid" aria-labelledby="dpTitle"><thead><tr>' + WD.map((w, i) => '<th scope="col" class="w' + i + '"><abbr title="' + w + '요일">' + w + '</abbr></th>').join('') + '</tr></thead><tbody></tbody></table>' +
+      '<div class="dp-foot"><button class="btn ghost dp-reset" data-act="dp-reset">처음 날짜로</button><span class="grow"></span><button class="btn" data-act="dp-close">취소</button><button class="btn primary" data-act="dp-save">이 날로 정하기</button></div>';
+    d.addEventListener('click', e => { if (e.target === d) closeDp(); });
+    d.addEventListener('cancel', e => { e.preventDefault(); closeDp(); });
+    d.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); closeDp(); return; } dpKey(e); });
+    let tx = null;
+    d.addEventListener('touchstart', e => { if (e.target.closest('.dp-grid')) tx = e.touches[0].clientX; }, { passive: true });
+    d.addEventListener('touchend', e => { if (tx === null) return; const dx = e.changedTouches[0].clientX - tx; tx = null; if (Math.abs(dx) > 50) dpMonth(dx < 0 ? 1 : -1, true); }, { passive: true });
+    document.body.appendChild(d);
+    return d;
+  };
+  const dpPaint = keepFocus => {
+    const d = dpEl(), v = dp.view, t = today();
+    $('.dp-day', d).textContent = longLabel(dp.sel);
+    const n = dayDiff(t, dp.sel);
+    $('.dp-dd', d).textContent = n > 0 ? 'D-' + n : '오늘';
+    $('.dp-month', d).textContent = v.getFullYear() + '년 ' + (v.getMonth() + 1) + '월';
+    const minMonth = fromYmd(t); minMonth.setDate(1);
+    $('[data-act="dp-prev"]', d).disabled = v <= minMonth;
+    $('.dp-reset', d).hidden = dp.sel === META.examDate || META.examDate < t;
+    const start = new Date(v); start.setDate(1 - v.getDay());
+    let rows = '';
+    for (let w = 0; w < 6; w++) {
+      rows += '<tr>';
+      for (let i = 0; i < 7; i++) {
+        const x = new Date(start); x.setDate(start.getDate() + w * 7 + i);
+        const id = ymd(x), out = x.getMonth() !== v.getMonth(), past = id < t, sel = id === dp.sel, now = id === t;
+        rows += '<td role="gridcell"' + (sel ? ' aria-selected="true"' : '') + '><button type="button" class="dd w' + i + (out ? ' out' : '') + (sel ? ' sel' : '') + (now ? ' now' : '') + '"' +
+          ' data-act="dp-pick" data-d="' + id + '" tabindex="' + (id === dp.focus ? 0 : -1) + '" aria-label="' + longLabel(id) + (now ? ', 오늘' : '') + (sel ? ', 고른 날짜' : '') + '"' +
+          (now ? ' aria-current="date"' : '') + (past ? ' disabled' : '') + '>' + x.getDate() + '</button></td>';
+      }
+      rows += '</tr>';
+    }
+    $('tbody', d).innerHTML = rows;
+    if (keepFocus) { const f = $('[data-d="' + dp.focus + '"]', d); if (f && !f.disabled) f.focus(); }
+  };
+  const dpMonth = (k, keepFocus) => {
+    const v = new Date(dp.view); v.setMonth(v.getMonth() + k);
+    const minMonth = fromYmd(today()); minMonth.setDate(1);
+    if (v < minMonth) return;
+    dp.view = v;
+    const f = fromYmd(dp.focus); f.setMonth(f.getMonth() + k);
+    if (f.getMonth() !== v.getMonth()) f.setDate(0);
+    dp.focus = ymd(f) < today() ? today() : ymd(f);
+    const d = dpEl(), g = $('.dp-grid', d);
+    if (!reduce) { g.classList.remove('slide-l', 'slide-r'); void g.offsetWidth; g.classList.add(k > 0 ? 'slide-l' : 'slide-r'); }
+    dpPaint(keepFocus);
+  };
+  const dpMoveFocus = days => {
+    const f = fromYmd(dp.focus); f.setDate(f.getDate() + days);
+    const id = ymd(f); if (id < today()) return;
+    dp.focus = id;
+    if (f.getMonth() !== dp.view.getMonth() || f.getFullYear() !== dp.view.getFullYear()) { dp.view = new Date(f.getFullYear(), f.getMonth(), 1); }
+    dpPaint(true);
+  };
+  const dpKey = e => {
+    if (!e.target.classList.contains('dd')) return;
+    const k = e.key, wd = fromYmd(dp.focus).getDay();
+    const map = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7, Home: -wd, End: 6 - wd };
+    if (k in map) { e.preventDefault(); dpMoveFocus(map[k]); }
+    else if (k === 'PageUp' || k === 'PageDown') { e.preventDefault(); dpMonth(k === 'PageUp' ? -1 : 1, true); }
+  };
+  const openDp = trigger => {
+    dp.back = trigger || null;
+    dp.sel = examDate() < today() ? today() : examDate(); dp.focus = dp.sel;
+    const v = fromYmd(dp.sel); dp.view = new Date(v.getFullYear(), v.getMonth(), 1);
+    const d = dpEl(); dpPaint(false); d.showModal(); document.body.classList.add('dp-open');
+    setTimeout(() => { const f = $('[data-d="' + dp.focus + '"]', d); if (f) f.focus(); }, 30);
+  };
+  const closeDp = () => {
+    const d = $('#datepick'); if (!d || !d.open) return;
+    const done = () => { d.close(); d.classList.remove('closing'); document.body.classList.remove('dp-open'); if (dp.back && dp.back.isConnected) dp.back.focus(); else { const b = $('[data-act="examdate"]'); if (b) b.focus(); } };
+    if (reduce) done(); else { d.classList.add('closing'); setTimeout(done, 180); }
+  };
+
   /* ── 오늘 ──────────────────────────────────────────── */
   let planDay = null;
   const viewHome = () => {
@@ -376,21 +477,23 @@
     const pct = doneN / ORDER.length;
 
     let h = '<section class="hero"><div class="hero-grid"><div>' +
-      '<div class="hero-date">' + dateLabel(t) + '요일 · 시험 ' + dateLabel(examDate()) + '요일 <button class="link-btn" data-act="examdate">날짜 바꾸기</button></div>' +
+      '<div class="hero-date"><span>오늘 ' + dateLabel(t) + '요일</span><span>시험 ' + dateLabel(examDate()) + '요일</span><button class="date-btn" data-act="examdate" aria-haspopup="dialog">' + I.calEdit + '날짜 바꾸기</button></div>' +
       '<h1 class="hero-title">' + (d > 0 ? '시험까지 <span class="num">' + d + '일</span>' : d === 0 ? '<span class="num">오늘</span> 시험이에요' : '시험이 끝났어요') + '</h1>' +
-      '<p class="hero-sub">' + (todayIds.length ? '오늘 몫은 <b>' + todayIds.length + '개 장</b>, 대략 <b>' + todayMin + '분</b>이에요.' : doneN === ORDER.length ? '모든 장을 읽었어요. 모의고사로 마무리해요.' : '오늘 몫은 끝났어요. 오답만 비우면 돼요.') + '</p>' +
-      '<div class="row">' + (next ? '<a class="btn sun lg" href="#/learn/' + next + '">' + (doneN ? '이어서 읽기' : '첫 장 시작하기') + ' · ' + NO[next] + I.arrow + '</a>' : '<a class="btn sun lg" href="#/exam">모의고사 풀기' + I.arrow + '</a>') +
+      '<p class="hero-sub">' + (d < 0 ? '다음 시험을 준비한다면 날짜를 바꿔 주세요. 계획이 새 날짜에 맞춰 다시 나눠져요.' : todayIds.length ? '오늘 몫은 <b>' + todayIds.length + '개 장</b>, 대략 <b>' + todayMin + '분</b>이에요.' : doneN === ORDER.length ? '모든 장을 읽었어요. 모의고사로 마무리해요.' : '오늘 몫은 끝났어요. 틀린 문제만 다시 풀면 돼요.') + '</p>' +
+      '<div class="row">' + (next ? '<a class="btn sun lg" href="#/learn/' + next + '">' + (doneN ? NO[next] + '부터 이어서 읽기' : '첫 장부터 시작하기') + I.arrow + '</a>' : '<a class="btn sun lg" href="#/exam">모의고사 풀기' + I.arrow + '</a>') +
       (wn ? '<a class="btn glass lg" href="#/quiz/wrong">오답 ' + wn + '개</a>' : '<a class="btn glass lg" href="#/quiz/random">섞어서 10문제</a>') + '</div></div>' +
       '<div class="hero-art">' + ring(pct, { size: 140, sw: 10, color: 'var(--sun)', track: 'rgba(255,255,255,.15)' }) + mascot(d <= 0 ? 'cheer' : 'happy', 'bob') + '<span class="pct">' + Math.round(pct * 100) + '% 읽음</span></div></div></section>';
 
-    const stat = (cls, icon, val, sub, label) => '<div class="stat ' + cls + '"><span class="si">' + icon + '</span><b><span data-count="' + val + '">' + val + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</b><span class="sl">' + label + '</span></div>';
-    h += '<div class="stats">' +
-      stat('t0', I.book, doneN, '/ ' + ORDER.length, '읽은 장') +
-      stat('t1', I.pen, seen.length, '/ ' + totalQ, '풀어 본 문제') +
-      (seen.length ? stat('t2', I.target, Math.round(okN / seen.length * 100), '%', '정답률') : '<div class="stat t2"><span class="si">' + I.target + '</span><b>-</b><span class="sl">정답률</span></div>') +
-      (S.exams.length ? stat('t3', I.trophy, S.exams[S.exams.length - 1].score, '점', '최근 모의고사') : '<div class="stat t3"><span class="si">' + I.trophy + '</span><b>-</b><span class="sl">최근 모의고사</span></div>') + '</div>';
+    // 숫자 네 개를 한 줄에. 아직 없는 값은 비워 두지 않고 무엇을 하면 채워지는지 적는다
+    const stat = (val, sub, label, empty) => '<div class="st"><span class="sl">' + label + '</span>' +
+      (val === null ? '<span class="se">' + empty + '</span>' : '<b><span data-count="' + val + '">' + val + '</span><small>' + sub + '</small></b>') + '</div>';
+    h += '<div class="strip">' +
+      stat(doneN, '/' + ORDER.length + '장', '읽은 장', '') +
+      stat(seen.length, '/' + totalQ, '풀어 본 문제', '') +
+      stat(seen.length ? Math.round(okN / seen.length * 100) : null, '%', '정답률', '문제를 풀면 보여요') +
+      stat(S.exams.length ? S.exams[S.exams.length - 1].score : null, '점', '최근 모의고사', '아직 안 봤어요') + '</div>';
 
-    h += '<section class="sec"><div class="sec-head"><h2>날짜별 계획</h2><small>하루치를 끝내면 다음 날이 가벼워져요</small></div><div class="seg">' +
+    h += '<section class="sec"><div class="sec-head"><h2>날짜별 계획</h2><small>날마다 읽을 장을 나눠 뒀어요</small></div><div class="seg">' +
       plan.map((p, i) => '<button data-act="day" data-i="' + i + '" aria-pressed="' + (i === planDay) + '"' + (i === planDay ? ' class="on"' : '') + '>' + (p.date === t ? '오늘' : dateLabel(p.date)) + (p.exam ? ' <span class="ex">시험</span>' : '') + '</button>').join('') + '</div>';
     const p = plan[planDay];
     const li = (href, cls, icon, label, meta, done) => '<li' + (done ? ' class="done"' : '') + '><a href="' + href + '" class="' + cls + '"><span class="pi">' + icon + '</span><span class="pt"><b>' + label + '</b><small>' + meta + '</small></span><span class="go">' + (done ? I.check : I.arrow) + '</span></a></li>';
@@ -401,11 +504,11 @@
     p.ids.forEach(id => { items += chLi(id); });
     const last = planDay === plan.length - 2;
     if (p.exam) {
-      items += li('#/sheet', 't0', I.sheet, '한 장 요약 처음부터 끝까지', '<span>20분</span>', false) + li('#/quiz/wrong', 't3', I.redo, '오답 노트 비우기', '<span>' + wn + '개 남음</span>', wn === 0 && seen.length > 0) +
+      items += li('#/sheet', 't0', I.sheet, '한 장 요약 처음부터 끝까지', '<span>20분</span>', false) + li('#/quiz/wrong', 't3', I.redo, '틀린 문제 다시 풀기', '<span>' + wn + '개 남음</span>', wn === 0 && seen.length > 0) +
         li('#/cards', 't2', I.cards, '모르는 카드만 넘겨 보기', '<span>10분</span>', false);
     } else {
-      if (last) items += li('#/exam', 't2', I.clock, '모의고사 1회, 시간 재고', '<span>50문항 · 90분</span>', S.exams.length > 0);
-      items += li('#/quiz/wrong', 't3', I.redo, '오늘 틀린 문제 다시 풀기', '<span>' + (wn ? wn + '개' : seen.length ? '다 비웠어요' : '아직 없어요') + '</span>', wn === 0 && seen.length > 0) +
+      if (last) items += li('#/exam', 't2', I.exam, '모의고사 1회, 시간 재고', '<span>50문항, 90분</span>', S.exams.length > 0);
+      items += li('#/quiz/wrong', 't3', I.redo, '오늘 틀린 문제 다시 풀기', '<span>' + (wn ? wn + '개' : seen.length ? '다 맞혔어요' : '아직 없어요') + '</span>', wn === 0 && seen.length > 0) +
         li('#/cards', 't2', I.cards, '자기 전에 암기 카드 한 바퀴', '<span>10분</span>', false);
     }
     h += '<ul class="plan">' + items + '</ul>';
@@ -417,12 +520,12 @@
       '<a href="#/learn/' + x.id + '"><div class="wt"><b>' + NO[x.id] + ' ' + esc(title(x.id)) + '</b><span>' + x.s.ok + ' / ' + x.s.seen + '</span></div><div class="bar"><i style="width:' + Math.round(x.r * 100) + '%"></i></div></a>').join('') + '</div></section>';
 
     h += installCard();
-    h += '<section class="sec"><div class="sec-head"><h2>이렇게 쓰면 돼요</h2></div><div class="howto">' +
-      '<div class="t0"><span class="hi">' + I.book + '</span><b>읽고 바로 풀어요</b><p>장마다 끝에 문제가 붙어 있어요. 한 번 꺼내 써 본 내용이 오래 남아요.</p></div>' +
-      '<div class="t3"><span class="hi">' + I.redo + '</span><b>틀린 건 알아서 모여요</b><p>오답 노트에서 맞히면 빠지고 또 틀리면 남아요. 시험 전날엔 이것만 비우면 돼요.</p></div>' +
-      '<div class="t1"><span class="hi">' + I.star + '</span><b>별 세 개부터</b><p>시간이 모자라면 별 세 개 장만 읽고 나머지는 한 장 요약으로 넘겨요.</p></div>' +
-      '<div class="t2"><span class="hi">' + I.trophy + '</span><b>합격선은 60점</b><p>1과목 4개, 2과목 16개를 못 넘기면 총점이 높아도 떨어져요. 1과목을 버리면 안 돼요.</p></div></div></section>';
-    h += '<p class="foot-note">공부 기록은 이 브라우저에만 저장돼요 · <button class="link-btn" data-act="reset">기록 지우기</button></p>';
+    h += '<details class="howto"' + (doneN || seen.length ? '' : ' open') + '><summary>처음이라면 읽어 보세요</summary><ol>' +
+      '<li>장을 읽고 끝에 붙은 문제를 바로 풀어요. 고르면 해설이 바로 나와요.</li>' +
+      '<li>틀린 문제는 오답 노트에 모여요. 다시 맞히면 빠지고, 또 틀리면 남아요.</li>' +
+      '<li>시간이 모자라면 별 세 개인 장부터 읽고, 나머지는 한 장 요약으로 훑어요.</li>' +
+      '<li>합격선은 60점이에요. 1과목에서 4개, 2과목에서 16개보다 적게 맞히면 총점과 상관없이 떨어져요.</li></ol></details>';
+    h += '<p class="foot-note">공부 기록은 이 브라우저에만 저장돼요.<br><button class="link-btn" data-act="reset">기록 지우기</button></p>';
     main.innerHTML = h;
   };
 
@@ -432,7 +535,7 @@
     let h = '<div class="page-head"><h1 class="page-title">개념</h1><p class="lead">별은 출제 비중이에요. 세 개는 거의 매회 나오는 장이에요.</p></div>';
     META.subjects.forEach(s => {
       const ids = s.parts.reduce((a, p) => a.concat(p.ids), []), dn = ids.filter(id => S.done[id]).length;
-      h += '<section class="subj"><div class="subj-head"><h2>' + s.name + ' ' + esc(s.title) + '</h2><span class="sp">' + dn + ' / ' + ids.length + ' 읽음 · ' + s.count + '문항</span></div>';
+      h += '<section class="subj"><div class="subj-head"><h2>' + s.name + ' ' + esc(s.title) + '</h2><span class="sp">' + ids.length + '장 중 ' + dn + '장 읽음</span></div>';
       s.parts.forEach(p => {
         h += '<div class="part-name ' + tc(p.ids[0]) + '"><i></i>' + esc(p.title) + '</div><div class="ch-grid">' + p.ids.map(id => {
           const st = chapStat(id), c = CH[id];
@@ -446,7 +549,70 @@
   };
 
   /* ── 장 ────────────────────────────────────────────── */
-  let picks = {};
+  let picks = {}, hn = 0;
+
+  /* ── 찾기 ──────────────────────────────────────────── */
+  // 장 제목, 소제목, 시험 직전에 볼 줄, 암기 카드에서 찾는다. 띄어쓰기와 대소문자는 가리지 않는다
+  const plain = s => String(s).replace(/[`*=]/g, '');
+  const norm = s => plain(s).toLowerCase().replace(/\s+/g, '');
+  let IDX = null;
+  const buildIdx = () => {
+    IDX = [];
+    ORDER.forEach(id => {
+      const c = CH[id]; if (!c) return;
+      IDX.push({ id, kind: '장', text: c.title, href: '#/learn/' + id });
+      let n = 0;
+      c.blocks.forEach(b => { if (b.t === 'h') { IDX.push({ id, kind: '소제목', text: plain(b.x), href: '#/learn/' + id + '/h-' + n }); n++; } });
+      c.keys.forEach(k => IDX.push({ id, kind: '요약', text: plain(k), href: '#/learn/' + id + '/keys' }));
+      c.cards.forEach(k => IDX.push({ id, kind: '카드', text: plain(k.q), sub: plain(k.a), href: '#/learn/' + id + '/keys' }));
+    });
+    IDX.forEach(x => { x.n = norm(x.text + ' ' + (x.sub || '')); });
+  };
+  const hiQuery = (text, q) => {
+    const t = esc(text); if (!q) return t;
+    const i = text.toLowerCase().indexOf(q.trim().toLowerCase());
+    return i < 0 ? t : esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.trim().length)) + '</mark>' + esc(text.slice(i + q.trim().length));
+  };
+  const KORDER = { '장': 0, '소제목': 1, '요약': 2, '카드': 3 };
+  const searchPaint = q => {
+    const d = $('#search'), list = $('.sr-list', d), nq = norm(q);
+    if (!nq) {
+      list.innerHTML = '<li class="sr-empty">예를 들어 <button class="sr-try" data-act="sr-try">ROLLUP</button><button class="sr-try" data-act="sr-try">NULL</button><button class="sr-try" data-act="sr-try">식별 관계</button><button class="sr-try" data-act="sr-try">SAVEPOINT</button></li>';
+      $('.sr-count', d).textContent = ''; return;
+    }
+    const hits = IDX.filter(x => x.n.includes(nq)).sort((a, b) => KORDER[a.kind] - KORDER[b.kind]).slice(0, 40);
+    $('.sr-count', d).textContent = hits.length ? hits.length + (hits.length === 40 ? '개 넘게' : '개') + ' 찾았어요' : '';
+    list.innerHTML = hits.length ? hits.map((x, i) => '<li><a class="sr-item ' + tc(x.id) + '" href="' + x.href + '" data-act="sr-go"' + (i === 0 ? ' data-sel="1"' : '') + '>' +
+      '<span class="nb">' + NO[x.id] + '</span><span class="sr-t"><b>' + hiQuery(x.text, q) + '</b>' + (x.sub ? '<small>' + hiQuery(x.sub, q) + '</small>' : '<small>' + esc(title(x.id)) + '</small>') + '</span><span class="sr-k">' + x.kind + '</span></a></li>').join('')
+      : '<li class="sr-empty">"' + esc(q) + '" 이 들어간 곳이 없어요. 낱말을 짧게 바꿔 보세요.</li>';
+  };
+  const openSearch = () => {
+    if (!IDX) buildIdx();
+    let d = $('#search');
+    if (!d) {
+      d = document.createElement('dialog'); d.id = 'search'; d.className = 'search'; d.setAttribute('aria-label', '개념 찾기');
+      d.innerHTML = '<div class="sr-bar">' + I.zoom + '<input type="search" placeholder="개념, 함수, 키워드를 찾아요" aria-label="찾을 말" autocomplete="off" enterkeyhint="search"><button class="sr-close" data-act="sr-close">닫기</button></div>' +
+        '<p class="sr-count" aria-live="polite"></p><ul class="sr-list"></ul>';
+      d.addEventListener('click', e => { if (e.target === d) d.close(); });
+      const inp = $('input', d);
+      inp.addEventListener('input', () => searchPaint(inp.value));
+      d.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { e.preventDefault(); d.close(); return; }
+        const items = $$('.sr-item', d); if (!items.length) return;
+        let i = items.findIndex(a => a.dataset.sel === '1');
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault(); if (i >= 0) delete items[i].dataset.sel;
+          i = (i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+          items[i].dataset.sel = '1'; items[i].scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter' && e.target === inp && i >= 0) { e.preventDefault(); items[i].click(); }
+      });
+      document.body.appendChild(d);
+    }
+    const back = document.activeElement;
+    d.onclose = () => { if (back && back.isConnected && !/\/(h-\d+|keys)$/.test(location.hash)) back.focus(); };
+    const inp = $('input', d); inp.value = ''; searchPaint('');
+    d.showModal(); inp.focus();
+  };
   const viewChapter = id => {
     main.className = tc(id);
     const c = CH[id], i = ORDER.indexOf(id);
@@ -455,18 +621,18 @@
     const navH = '<nav class="chap-nav">' + (prev ? '<a href="#/learn/' + prev + '"><small>← 이전 ' + NO[prev] + '</small>' + esc(title(prev)) + '</a>' : '<span></span>') +
       (next ? '<a class="next" href="#/learn/' + next + '"><small>다음 ' + NO[next] + ' →</small>' + esc(title(next)) + '</a>' : '<a class="next" href="#/exam"><small>다 읽었으면 →</small>모의고사</a>') + '</nav>';
     if (!c) { main.innerHTML = '<div class="empty">' + mascot('sleepy') + '<b>이 장은 아직 준비 중이에요</b></div>' + navH; return; }
-    picks = {};
+    picks = {}; hn = 0;
     main.innerHTML =
-      '<header class="chap-hero"><div class="crumb"><span class="nb">' + NO[id] + '</span><span class="chip">' + SUBJ[id].name + ' · ' + esc(PARTNAME[id]) + '</span></div>' +
-      mascot('happy', 'bob') + '<h1 class="page-title">' + esc(c.title) + '</h1><p class="lead">' + fmt(c.lead) + '</p>' +
-      '<div class="row" style="margin-top:16px"><span class="chip">' + I.clock + '읽기 ' + c.minutes + '분</span><span class="chip">' + I.pen + '문제 ' + c.quiz.length + '</span><span class="chip">출제 ' + stars(c.weight) + '</span></div></header>' +
-      '<div class="goals"><h2 class="goals-t">' + I.target + '이 장을 읽고 나면</h2><ul>' + c.goals.map(g => '<li><span>' + fmt(g) + '</span></li>').join('') + '</ul></div>' +
+      '<header class="chap-hero"><div class="crumb"><span class="nb">' + NO[id] + '</span><span class="chip">' + SUBJ[id].name + '</span><span class="chip">' + esc(PARTNAME[id]) + '</span></div>' +
+      '<h1 class="page-title">' + esc(c.title) + '</h1><p class="lead">' + fmt(c.lead) + '</p>' +
+      '<p class="chap-meta"><span>' + I.clock + '읽기 ' + c.minutes + '분</span><span>' + I.pen + '문제 ' + c.quiz.length + '개</span><span>출제 비중 ' + stars(c.weight) + '</span></p></header>' +
+      '<div class="goals"><h2 class="goals-t">이 장을 읽고 나면</h2><ol>' + c.goals.map(g => '<li>' + fmt(g) + '</li>').join('') + '</ol></div>' +
       '<article class="prose">' + c.blocks.map(block).join('') + '</article>' +
-      '<section class="keys"><h2>' + I.pin + '시험 직전에 볼 것</h2><ol>' + c.keys.map(k => '<li><span>' + fmt(k) + '</span></li>').join('') + '</ol></section>' +
-      '<div class="quiz-head"><span class="qh-i">' + I.pen + '</span><div><h2>바로 풀어 보기</h2><small>' + c.quiz.length + '문제 · 고르면 바로 해설이 나와요</small></div></div>' +
+      '<section class="keys" id="keys"><h2>시험 직전에 볼 것</h2><ol>' + c.keys.map(k => '<li><span>' + fmt(k) + '</span></li>').join('') + '</ol></section>' +
+      '<div class="quiz-head"><h2>바로 풀어 보기</h2><small>' + c.quiz.length + '문제예요. 고르면 바로 해설이 나와요.</small></div>' +
       '<div id="chapQuiz">' + c.quiz.map((q, n) => qCard(q, { n: n + 1, ctx: 'chap' })).join('') + '</div><div id="chapScore"></div>' +
       '<div class="chap-foot"><button class="btn lg ' + (S.done[id] ? '' : 'primary') + '" data-act="done" data-id="' + id + '">' + (S.done[id] ? '읽음 표시 풀기' : I.check + '다 읽었어요') + '</button>' +
-      (next ? '<a class="btn lg" href="#/learn/' + next + '">다음 장 · ' + esc(title(next)) + I.arrow + '</a>' : '<a class="btn lg" href="#/exam">모의고사 풀기' + I.arrow + '</a>') + '</div>' + navH;
+      (next ? '<a class="btn lg" href="#/learn/' + next + '">다음 장 읽기' + I.arrow + '</a>' : '<a class="btn lg" href="#/exam">모의고사 풀기' + I.arrow + '</a>') + '</div>' + navH;
   };
   const chapScore = id => {
     const c = CH[id], n = c.quiz.filter(q => picks[q.id]).length;
@@ -474,7 +640,7 @@
     const ok = c.quiz.filter(q => picks[q.id] === q.answer).length, all = ok === c.quiz.length;
     const el = $('#chapScore');
     el.innerHTML = '<div class="card score-card">' + mascot(all ? 'cheer' : ok / c.quiz.length < .5 ? 'sad' : 'happy', 'hop') + '<div><h3>' + c.quiz.length + '문제 중 ' + ok + '개 맞았어요</h3><p>' +
-      (all ? '이 장은 넘어가도 돼요.' : '틀린 ' + (c.quiz.length - ok) + '개는 오답 노트에 들어갔어요. 해설에서 걸린 부분만 위에서 다시 읽고 넘어가요.') + '</p></div></div>';
+      (all ? '이 장은 넘어가도 돼요.' : '틀린 ' + (c.quiz.length - ok) + '개는 오답 노트에 들어갔어요. 해설에서 헷갈린 부분만 위에서 다시 읽고 넘어가요.') + '</p></div></div>';
     if (all) burstFrom(el);
     if (!S.done[id]) {
       S.done[id] = true; save(); renderNav();
@@ -489,11 +655,13 @@
   const viewQuizHub = () => {
     main.className = 'wide';
     const wn = wrongIds().length, total = Object.keys(QS).length, hard = allQ().filter(q => q.level === 3).length;
-    let h = '<div class="page-head"><h1 class="page-title">문제 풀기</h1><p class="lead">전부 ' + total + '문제예요. 안 풀어 본 문제가 먼저 나와요.</p></div><div class="pick-grid">' +
-      '<a class="pick t1" href="#/quiz/random"><span class="pk-i">' + I.shuffle + '</span><b>섞어서 10문제</b><span>장을 가리지 않고 뽑아요. 틈날 때 한 판씩.</span></a>' +
-      '<a class="pick t3" href="#/quiz/hard"><span class="pk-i">' + I.flame + '</span><b>고난도 10문제</b><span>끝까지 계산해야 하는 ' + hard + '문제 중에서.</span></a>' +
-      '<a class="pick t0" href="#/quiz/wrong">' + (wn ? '<span class="cnt">' + wn + '</span>' : '') + '<span class="pk-i">' + I.redo + '</span><b>오답 노트</b><span>' + (wn ? '맞히면 빠지고 틀리면 남아요.' : '아직 틀린 문제가 없어요.') + '</span></a>' +
-      '<a class="pick t2" href="#/exam"><span class="pk-i">' + I.clock + '</span><b>모의고사</b><span>50문항 90분. 실제 시험과 같은 비율로.</span></a></div>';
+    const mode = (href, title, desc, meta, strong) => '<a class="mode' + (strong ? ' strong' : '') + '" href="' + href + '"><span class="mt"><b>' + title + '</b><span>' + desc + '</span></span><span class="mm">' + meta + '</span>' + I.right + '</a>';
+    let h = '<div class="page-head"><h1 class="page-title">문제 풀기</h1><p class="lead">전부 ' + total + '문제예요. 안 풀어 본 문제가 먼저 나와요.</p></div><nav class="modes" aria-label="푸는 방식">' +
+      (wn ? mode('#/quiz/wrong', '오답 노트', '맞히면 빠지고 틀리면 남아요.', wn + '개 남음', true) : '') +
+      mode('#/quiz/random', '섞어서 10문제', '장을 가리지 않고 뽑아요.', '10문제') +
+      mode('#/quiz/hard', '고난도만 10문제', '끝까지 계산해야 하는 문제예요.', hard + '문제 중') +
+      mode('#/exam', '모의고사', '실제 시험과 같은 비율로 50문항을 90분 안에 풀어요.', '50문항') +
+      (wn ? '' : mode('#/quiz/wrong', '오답 노트', '아직 틀린 문제가 없어요.', '0개')) + '</nav>';
     META.subjects.forEach(s => {
       h += '<section class="sec"><div class="sec-head"><h2>' + s.name + ' 장별로</h2></div><div class="topic-list">';
       s.parts.forEach(p => p.ids.forEach(id => {
@@ -531,15 +699,15 @@
       main.innerHTML = '<section class="result"><div class="score-ring">' + ring(pct, { size: 196, sw: 14, color: pct >= .6 ? 'var(--ok)' : 'var(--no)' }) +
         '<div class="in"><b data-count="' + ok + '">' + ok + '</b><small>' + n + '문제 중</small></div></div>' + mascot(pct >= .8 ? 'cheer' : pct < .5 ? 'sad' : 'happy', 'hop') +
         '<h1>' + (pct === 1 ? '전부 맞혔어요' : pct >= .8 ? '거의 다 맞혔어요' : pct >= .6 ? '합격선은 넘었어요' : '한 번 더 보면 돼요') + '</h1>' +
-        '<p>' + (miss.length ? '틀린 ' + miss.length + '개는 오답 노트에 들어갔어요. 지금 바로 다시 풀면 가장 잘 남아요.' : esc(s.name) + '을 깔끔하게 끝냈어요.') + '</p>' +
-        '<div class="row">' + (miss.length ? '<button class="btn primary lg" data-act="retry">틀린 것만 다시</button>' : '') + '<button class="btn lg" data-act="again">새로 뽑아서</button><a class="btn ghost lg" href="#/quiz">목록으로</a></div></section>' +
+        '<p>' + (miss.length ? '틀린 ' + miss.length + '개는 오답 노트에 들어갔어요. 지금 바로 다시 풀어 봐요.' : '틀린 문제가 없어요.') + '</p>' +
+        '<div class="row">' + (miss.length ? '<button class="btn primary lg" data-act="retry">틀린 것만 다시 풀기</button>' : '') + '<button class="btn lg" data-act="again">새로 뽑기</button><a class="btn ghost lg" href="#/quiz">목록 보기</a></div></section>' +
         (miss.length ? '<section class="sec"><div class="sec-head"><h2>틀린 문제 해설</h2></div>' + miss.map(q => qCard(q, { ctx: 'review', reveal: true, picked: s.picked[q.id], showChap: true })).join('') + '</section>' : '');
       if (pct >= .8) setTimeout(() => confetti(null, innerHeight * .3, 120), 350);
       return;
     }
     const q = s.qs[s.i], pk = s.picked[q.id];
     main.innerHTML = '<div class="sess-top"><a class="icon-btn" href="#/quiz" aria-label="그만하기">' + I.x + '</a><div class="bar"><i style="width:' + ((s.i + (pk ? 1 : 0)) / n * 100) + '%"></i></div><span class="cnt">' + (s.i + 1) + ' / ' + n + '</span></div>' +
-      '<h1 class="sess-label">' + esc(s.name) + '<span class="sr"> ' + (s.i + 1) + '번째 문제</span>' + (s.streak >= 3 ? ' · <span class="streak">' + s.streak + '연속 정답</span>' : '') + '</h1>' +
+      '<h1 class="sess-label">' + esc(s.name) + '<span class="sr"> ' + (s.i + 1) + '번째 문제</span>' + (s.streak >= 3 ? '<span class="streak">' + s.streak + '문제 연속 정답</span>' : '') + '</h1>' +
       qCard(q, { ctx: 'sess', picked: pk, reveal: !!pk, showChap: s.opt.showChap }) +
       (pk ? '' : '<div class="kbd-hint"><kbd>1</kbd>~<kbd>4</kbd> 로 고르고 <kbd>Enter</kbd> 로 넘어가요</div>');
     if (pk) showFb(q, pk);
@@ -587,14 +755,14 @@
     if (e && e.ids.some(id => !QS[id])) { S.exam = e = null; save(); }
     if (!e) {
       const total = Object.keys(QS).length;
-      main.innerHTML = '<div class="page-head"><div class="exam-card"><span class="big-i">' + I.clock + '</span><div><h1 class="page-title" style="margin:0">모의고사</h1><p class="lead" style="font-size:16px">실제 시험처럼 50문항을 90분 안에 풀어요.</p></div></div></div>' +
+      main.innerHTML = '<div class="page-head"><div class="exam-card"><span class="big-i">' + I.exam + '</span><div><h1 class="page-title" style="margin:0">모의고사</h1><p class="lead" style="font-size:16px">실제 시험처럼 50문항을 90분 안에 풀어요.</p></div></div></div>' +
         '<div class="rules"><div><b>50</b><span>문항</span></div><div><b>90분</b><span>시간</span></div><div><b>60점</b><span>합격선</span></div></div>' +
         '<div class="card"><p style="margin:0 0 6px"><b>어떻게 뽑나요?</b> 1과목 10문항은 장마다 하나씩, 2과목 40문항은 실제 출제 비중대로 뽑아요. 안 풀어 본 문제를 먼저 넣어요.</p>' +
-        '<p class="muted small" style="margin:0">총점 60점 이상이어도 1과목 4개, 2과목 16개를 못 넘기면 과락이에요. 중간에 창을 닫아도 이어서 풀 수 있고, 시간은 계속 흘러요.</p></div>' +
+        '<p class="muted small" style="margin:0">총점이 60점을 넘어도 1과목에서 4개, 2과목에서 16개보다 적게 맞히면 과락이에요. 중간에 창을 닫아도 이어서 풀 수 있고, 시간은 계속 흘러요.</p></div>' +
         '<div class="row" style="margin-top:20px"><button class="btn primary lg" data-act="exam-start"' + (total < 50 ? ' disabled' : '') + '>시작하기' + I.arrow + '</button></div>' +
         (S.exams.length ? '<section class="sec"><div class="sec-head"><h2>지난 기록</h2></div><div class="topic-list">' + S.exams.slice().reverse().map((x, i) => {
           const d = new Date(x.t), pass = x.score >= 60 && x.s1 >= 4 && x.s2 >= 16;
-          return '<a><span class="nb t2" style="width:auto;padding:0 8px">' + (S.exams.length - i) + '회</span><span>' + (d.getMonth() + 1) + '/' + d.getDate() + ' · 1과목 ' + x.s1 + '/' + x.n1 + ' · 2과목 ' + x.s2 + '/' + x.n2 + '</span><span class="rt ' + (pass ? 'pass-t' : 'fail-t') + '">' + x.score + '점</span></a>';
+          return '<a><span class="nb t2" style="width:auto;padding:0 8px">' + (S.exams.length - i) + '회</span><span>' + (d.getMonth() + 1) + '/' + d.getDate() + '  1과목 ' + x.s1 + '/' + x.n1 + ', 2과목 ' + x.s2 + '/' + x.n2 + '</span><span class="rt ' + (pass ? 'pass-t' : 'fail-t') + '">' + x.score + '점</span></a>';
         }).join('') + '</div></section>' : '');
       return;
     }
@@ -603,12 +771,12 @@
     if (left() <= 0) { gradeExam(); return viewExamResult(); }
     const n = e.ids.length, q = QS[e.ids[e.i]], answered = e.ids.filter(id => e.ans[id]).length;
     main.innerHTML = '<div class="sess-top"><span class="cnt">' + (e.i < e.n1 ? '1과목' : '2과목') + '</span><div class="bar"><i style="width:' + (answered / n * 100) + '%"></i></div><span class="timer" id="timer" role="timer" aria-label="남은 시간">' + I.clock + fmtTime(left()) + '</span></div>' +
-      '<h1 class="sess-label">모의고사 · ' + (e.i + 1) + ' / ' + n + ' · 푼 문제 ' + answered + '</h1>' +
+      '<h1 class="sess-label">모의고사 ' + (e.i + 1) + '번 문제<span class="streak">' + n + '문제 중 ' + answered + '문제 풀었어요</span></h1>' +
       qCard(q, { ctx: 'exam', n: e.i + 1, picked: e.ans[q.id] }) +
       '<div class="sess-foot"><button class="btn" data-act="exam-go" data-i="' + (e.i - 1) + '"' + (e.i ? '' : ' disabled') + '>이전</button>' +
       '<button class="btn' + (e.flag[q.id] ? ' sun' : '') + '" data-act="exam-flag">' + I.flag + (e.flag[q.id] ? '표시됨' : '나중에') + '</button>' +
       (e.i < n - 1 ? '<button class="btn primary" data-act="exam-go" data-i="' + (e.i + 1) + '">다음</button>' : '<button class="btn primary" data-act="exam-submit">제출하기</button>') + '</div>' +
-      '<details class="map" open><summary>' + I.list + '문제 지도 · 노란 점은 나중에 볼 문제</summary><div class="navi">' +
+      '<details class="map" open><summary>' + I.grid + '문제 번호<span class="muted">(노란 점은 나중에 볼 문제예요)</span></summary><div class="navi">' +
       e.ids.map((id, i) => '<button data-act="exam-go" data-i="' + i + '" class="' + (e.ans[id] ? 'ans ' : '') + (i === e.i ? 'cur ' : '') + (e.flag[id] ? 'flag' : '') + '">' + (i + 1) + '</button>').join('') + '</div></details>' +
       '<div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn sm" data-act="exam-submit">제출하기</button></div>';
     examTimer = setInterval(() => {
@@ -621,8 +789,8 @@
     const e = S.exam, n = e.ids.length, n2 = n - e.n1, pass = e.score >= 60 && e.s1 >= 4 && e.s2 >= 16;
     const wrong = e.ids.filter(id => e.ans[id] !== QS[id].answer);
     let h = '<section class="result"><span class="badge-pass ' + (pass ? 'ok' : 'no') + '">' + (pass ? I.check + '합격선 통과' : e.score >= 60 ? I.alert + '과락' : I.alert + '합격선 60점') + '</span>' +
-      '<div class="score-ring">' + ring(e.score / 100, { size: 196, sw: 14, color: pass ? 'var(--ok)' : 'var(--no)' }) + '<div class="in"><b data-count="' + e.score + '">' + e.score + '</b><small>점 · ' + Math.round(e.used / 60) + '분 걸림</small></div></div>' +
-      '<h1>' + (pass ? '이대로면 붙어요' : '조금만 더 하면 돼요') + '</h1><p>' + (pass ? '틀린 문제만 다시 보고 한 번 더 풀어 봐요.' : '아래 많이 틀린 장부터 다시 읽고 오답 노트를 비워요.') + '</p></section>' +
+      '<div class="score-ring">' + ring(e.score / 100, { size: 196, sw: 14, color: pass ? 'var(--ok)' : 'var(--no)' }) + '<div class="in"><b data-count="' + e.score + '">' + e.score + '</b><small>점, ' + Math.round(e.used / 60) + '분 걸렸어요</small></div></div>' +
+      '<h1>' + (pass ? '이번에는 합격선을 넘었어요' : '아직 합격선 아래예요') + '</h1><p>' + (pass ? '틀린 문제만 다시 보고 한 번 더 풀어 봐요.' : '아래 많이 틀린 장부터 다시 읽고 틀린 문제를 다시 풀어요.') + '</p></section>' +
       '<div class="subj-res"><div class="' + (e.s1 >= 4 ? '' : 'fail') + '"><div class="sr-t"><span>1과목</span><span>4개 이상</span></div><b>' + e.s1 + '<small> / ' + e.n1 + '</small></b><div class="bar"><i style="width:' + (e.s1 / e.n1 * 100) + '%"></i></div></div>' +
       '<div class="' + (e.s2 >= 16 ? '' : 'fail') + '"><div class="sr-t"><span>2과목</span><span>16개 이상</span></div><b>' + e.s2 + '<small> / ' + n2 + '</small></b><div class="bar"><i style="width:' + (e.s2 / n2 * 100) + '%"></i></div></div></div>';
     const by = {}; wrong.forEach(id => { const c = QCH[id]; by[c] = (by[c] || 0) + 1; });
@@ -654,14 +822,14 @@
     const c = deck.cards[deck.i];
     if (!c) {
       h += '<div class="empty">' + mascot(deck.total ? 'cheer' : 'sleepy', 'bob') + '<b>' + (deck.total ? '한 바퀴 돌았어요' : '카드가 없어요') + '</b>' + (deck.total ? deck.total + '장 중 ' + deck.know + '장을 알고 있어요.' : '') +
-        '<div class="row" style="justify-content:center;margin-top:18px">' + (dont ? '<button class="btn primary" data-act="deck" data-f="dont">모르는 것만 다시</button>' : '') + '<button class="btn" data-act="deck" data-f="' + deck.f + '">다시 섞기</button></div></div>';
+        '<div class="row" style="justify-content:center;margin-top:18px">' + (dont ? '<button class="btn primary" data-act="deck" data-f="dont">모르는 것만 다시 보기</button>' : '') + '<button class="btn" data-act="deck" data-f="' + deck.f + '">다시 섞기</button></div></div>';
     } else {
       h += '<div class="sess-top" style="position:static;grid-template-columns:1fr auto"><div class="bar"><i style="width:' + (deck.i / deck.cards.length * 100) + '%"></i></div><span class="cnt">' + (deck.i + 1) + ' / ' + deck.cards.length + '</span></div>' +
         '<div class="fc-stack"><button class="fc' + (deck.flip ? ' flip' : '') + '" data-act="flip" aria-pressed="' + deck.flip + '">' +
         '<div class="face front"' + (deck.flip ? ' aria-hidden="true"' : '') + '><span class="side-lbl">' + NO[c.ch] + ' ' + esc(title(c.ch)) + '</span><div>' + fmt(c.q) + '</div><span class="hint">답을 떠올린 다음 눌러서 뒤집어요</span></div>' +
         '<div class="face back"' + (deck.flip ? '' : ' aria-hidden="true"') + '><span class="side-lbl">답</span><div>' + fmt(c.a) + '</div></div></button></div>' +
         '<div class="fc-btns"><button class="btn lg" data-act="card" data-v="0"' + (deck.flip ? '' : ' disabled') + '>' + I.x + '몰랐어요</button><button class="btn ok lg" data-act="card" data-v="1"' + (deck.flip ? '' : ' disabled') + '>' + I.check + '알았어요</button></div>' +
-        '<div class="kbd-hint"><kbd>Space</kbd> 뒤집기 · <kbd>←</kbd> 몰랐어요 · <kbd>→</kbd> 알았어요</div>';
+        '<div class="kbd-hint"><kbd>Space</kbd> 뒤집기, <kbd>←</kbd> 몰랐어요, <kbd>→</kbd> 알았어요</div>';
     }
     main.innerHTML = h + '</div>';
   };
@@ -686,7 +854,7 @@
   /* ── 한 장 요약 ────────────────────────────────────── */
   const viewSheet = () => {
     main.className = 'wide';
-    let h = '<div class="page-head"><div class="row"><h1 class="page-title grow" style="margin:0">한 장 요약</h1><button class="btn sm no-print" data-act="print">' + I.sheet + '인쇄하기</button></div>' +
+    let h = '<div class="page-head"><div class="row"><h1 class="page-title grow" style="margin:0">한 장 요약</h1><button class="btn sm no-print" data-act="print">' + I.print + '인쇄하기</button></div>' +
       '<p class="lead" style="margin-top:8px">장마다 시험 직전에 볼 줄만 모았어요. 막히는 줄이 있으면 제목을 눌러 그 장으로 가요.</p></div>';
     META.subjects.forEach(s => {
       h += '<h2 class="sheet-subj">' + s.name + ' ' + esc(s.title) + '</h2><div class="sheet-grid">';
@@ -730,7 +898,12 @@
       // 화면이 바뀌면 새 화면의 제목으로 초점을 옮겨 어디에 왔는지 읽히게 한다
       if (!first) { const h1 = $('h1', main) || main; h1.tabIndex = -1; h1.focus({ preventScroll: true }); }
     }
-    document.title = (r[0] === 'learn' && r[1] ? title(r[1]) + ' · ' : '') + '세미콜론';
+    document.title = (r[0] === 'learn' && r[1] ? title(r[1]) + ' | ' : '') + '세미콜론';
+    // 찾기에서 소제목이나 요약으로 들어오면 그 자리로 간다
+    if (r[0] === 'learn' && r[2]) {
+      const target = document.getElementById(r[2]);
+      if (target) { target.scrollIntoView({ block: 'start' }); target.classList.add('flash'); target.tabIndex = -1; target.focus({ preventScroll: true }); setTimeout(() => target.classList.remove('flash'), 1600); }
+    }
     onScroll();
   };
   addEventListener('hashchange', () => render());
@@ -776,7 +949,17 @@
     else if (act === 'done') { const id = el.dataset.id; if (S.done[id]) delete S.done[id]; else { S.done[id] = true; burstFrom(el); } save(); render(true); }
     else if (act === 'day') { planDay = +el.dataset.i; render(true); }
     else if (act === 'theme') { const t = isDark() ? 'light' : 'dark'; document.documentElement.dataset.theme = t; try { localStorage.setItem('sqld.theme', t); } catch (x) {} renderNav(); }
-    else if (act === 'examdate') { const v = prompt('시험 날짜를 적어 주세요 (예: 2026-11-14)', examDate()); if (v && /^\d{4}-\d{2}-\d{2}$/.test(v.trim())) { S.examDate = v.trim(); save(); planDay = null; render(true); } }
+    else if (act === 'dp-pick') { dp.sel = el.dataset.d; dp.focus = el.dataset.d; dpPaint(true); }
+    else if (act === 'dp-prev' || act === 'dp-next') dpMonth(act === 'dp-next' ? 1 : -1, false);
+    else if (act === 'dp-close') closeDp();
+    else if (act === 'dp-reset') { dp.sel = META.examDate < today() ? today() : META.examDate; dp.focus = dp.sel; const v = fromYmd(dp.sel); dp.view = new Date(v.getFullYear(), v.getMonth(), 1); dpPaint(true); }
+    else if (act === 'dp-save') {
+      const changed = dp.sel !== examDate();
+      if (dp.sel === META.examDate) delete S.examDate; else S.examDate = dp.sel;
+      save(); planDay = null; closeDp(); render(true);
+      if (changed) toast('시험 날짜를 ' + dateLabel(dp.sel) + '요일로 바꿨어요');
+    }
+    else if (act === 'examdate') { openDp(el); }
     else if (act === 'reset') { if (confirm('읽은 장, 푼 문제, 오답 노트, 모의고사 기록을 모두 지울까요? 되돌릴 수 없어요.')) { localStorage.removeItem(KEY); location.hash = '#/'; location.reload(); } }
     else if (act === 'exam-start' || act === 'exam-new') {
       if (act === 'exam-new' && !confirm('지금 결과 화면은 사라지고 새 문제로 시작해요. 점수 기록은 남아요.')) return;
@@ -800,6 +983,10 @@
       if (navigator.clipboard) navigator.clipboard.writeText(code).then(done, done); else done();
     }
     else if (act === 'print') print();
+    else if (act === 'search') openSearch();
+    else if (act === 'sr-close') $('#search').close();
+    else if (act === 'sr-go') { $('#search').close(); }
+    else if (act === 'sr-try') { const inp = $('#search input'); inp.value = el.textContent; searchPaint(inp.value); inp.focus(); }
     else if (act === 'zoom') openZoom(el.closest('.fig'));
     else if (act === 'lb-close') $('#lightbox').close();
     else if (act === 'install') { if (installEvt) { installEvt.prompt(); installEvt.userChoice.then(() => { installEvt = null; render(true); }); } }
@@ -815,9 +1002,11 @@
   addEventListener('resize', syncSide);
   $('#skip').addEventListener('click', ev => { ev.preventDefault(); const h = $('h1', main) || main; h.tabIndex = -1; h.focus(); });
   document.addEventListener('keydown', ev => {
+    if (ev.key === 'k' && (ev.ctrlKey || ev.metaKey) && !document.querySelector('dialog[open]')) { ev.preventDefault(); openSearch(); return; }
     if (ev.target.matches('input, textarea') || ev.ctrlKey || ev.metaKey || ev.altKey) return;
     const r = route();
     if (ev.key === 'Escape') { if (closeSide()) $('#menuBtn').focus(); return; }
+    if ((ev.key === '/' || (ev.key === 'k' && (ev.ctrlKey || ev.metaKey))) && !document.querySelector('dialog[open]')) { ev.preventDefault(); openSearch(); return; }
     if (r[0] === 'quiz' && r[1] && sess && sess.i < sess.qs.length) {
       if (/^[1-4]$/.test(ev.key)) { const b = $('.q[data-ctx="sess"] .choice[data-i="' + ev.key + '"]'); if (b && !b.disabled) b.click(); }
       else if (ev.key === 'Enter' || ev.key === 'ArrowRight') { const n = $('.fb [data-act="next"]'); if (n) { ev.preventDefault(); n.click(); } }

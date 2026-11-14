@@ -3,7 +3,7 @@ SQLD.add({
   title: 'Top N 쿼리',
   minutes: 12,
   weight: 2,
-  lead: '"상위 몇 건"을 뽑는 방법은 네 가지이고, 시험은 그중 ROWNUM 이 왜 생각대로 안 되는지와 동점을 몇 건으로 세는지를 물어요. 규칙 두 개만 알면 대부분 풀립니다.',
+  lead: '"상위 몇 건"을 뽑는 방법은 네 가지이고, 시험은 그중 ROWNUM 이 왜 생각대로 안 되는지와 동점을 몇 건으로 세는지를 물어요. 규칙 두 개만 알면 대부분 풀려요.',
   goals: [
     'ROWNUM 조건 중 결과가 나오는 것과 0건인 것을 가른다',
     '정렬한 뒤 자르려면 왜 인라인 뷰가 필요한지 설명한다',
@@ -24,7 +24,7 @@ SQLD.add({
 
     { t: 'h', x: 'ROWNUM 은 통과한 행에만 번호가 붙어요' },
     { t: 'p', x: 'ROWNUM 은 테이블에 저장된 값이 아니에요. 행을 하나 읽어서 ==WHERE 조건을 통과할 때마다 1, 2, 3 … 순서로 붙이는 번호==예요. 통과하지 못한 행은 번호를 받지 못하고, 그 번호는 다음 행이 다시 받아요.' },
-    { t: 'p', x: '`WHERE ROWNUM = 2` 를 따라가 볼게요. 첫 행이 번호 1 후보가 돼요. 1 은 2 가 아니니 탈락이에요. 다음 행이 다시 번호 1 후보가 되고, 또 탈락해요. 끝까지 가도 번호 2 가 붙는 행이 없어서 결과는 0건입니다. `ROWNUM > 1` 도 같은 이유로 0건이에요.' },
+    { t: 'p', x: '`WHERE ROWNUM = 2` 를 따라가 볼게요. 첫 행이 번호 1 후보가 돼요. 1 은 2 가 아니니 탈락이에요. 다음 행이 다시 번호 1 후보가 되고, 또 탈락해요. 끝까지 가도 번호 2 가 붙는 행이 없어서 결과는 0건이에요. `ROWNUM > 1` 도 같은 이유로 0건이에요.' },
     { t: 'table', head: ['조건', '결과', '이유'], rows: [
       ['`ROWNUM = 1`', '1건', '첫 행이 1 을 받고 통과'],
       ['`ROWNUM <= 3`, `ROWNUM < 4`', '3건', '1, 2, 3 을 차례로 받고 통과'],
@@ -34,7 +34,7 @@ SQLD.add({
       ['`ROWNUM BETWEEN 2 AND 3`', '0건', '위와 같다'],
       ['`ROWNUM >= 1`, `ROWNUM > 0`', '전체', '모든 행이 통과']
     ] },
-    { t: 'trap', title: '오류가 아니라 0건', x: '`ROWNUM = 2` 나 `ROWNUM > 1` 은 문법 오류가 아니에요. 실행은 되고 결과가 한 건도 안 나옵니다. "오류가 발생한다"는 보기와 "0건"이라는 보기가 같이 나오면 0건 쪽이에요. ==1 을 포함하는 조건만 결과가 나온다==고 외우면 됩니다.' },
+    { t: 'trap', title: '오류가 아니라 0건', x: '`ROWNUM = 2` 나 `ROWNUM > 1` 은 문법 오류가 아니에요. 실행은 되고 결과가 한 건도 안 나와요. "오류가 발생한다"는 보기와 "0건"이라는 보기가 같이 나오면 0건 쪽이에요. ==1 을 포함하는 조건만 결과가 나온다==고 외우면 돼요.' },
 
     { t: 'h', x: 'ROWNUM 이 ORDER BY 보다 먼저예요' },
     { t: 'p', x: '급여 상위 세 명을 뽑으려고 이렇게 쓰면 틀려요. WHERE 가 ORDER BY 보다 먼저 실행돼서, 아무 세 행을 먼저 자르고 그 세 행만 정렬하기 때문이에요.' },
@@ -91,10 +91,10 @@ SQLD.add({
   <rect x="550" y="80" width="60" height="24" class="bx-a"/><text x="580" y="97" class="tx-a" text-anchor="middle">400</text>
   <rect x="550" y="104" width="60" height="24" class="bx-a"/><text x="580" y="121" class="tx-a" text-anchor="middle">400</text>
 </svg>` },
-    { t: 'trap', title: '같은 문장의 WHERE ROWNUM 과 ORDER BY', x: '한 SELECT 문 안에 `WHERE ROWNUM <= N` 과 `ORDER BY` 가 같이 있으면 "상위 N 건"이 아니에요. 먼저 N 건을 자르고 그것만 정렬합니다. SELECT 절에 `ROWNUM AS RN` 을 쓰고 같은 문장에서 ORDER BY 를 해도 번호는 정렬 전 순서로 붙어요.' },
+    { t: 'trap', title: '같은 문장의 WHERE ROWNUM 과 ORDER BY', x: '한 SELECT 문 안에 `WHERE ROWNUM <= N` 과 `ORDER BY` 가 같이 있으면 "상위 N 건"이 아니에요. 먼저 N 건을 자르고 그것만 정렬해요. SELECT 절에 `ROWNUM AS RN` 을 쓰고 같은 문장에서 ORDER BY 를 해도 번호는 정렬 전 순서로 붙어요.' },
 
     { t: 'h', x: '중간 구간(4 ~ 5 번째)을 뽑을 때' },
-    { t: 'p', x: '`ROWNUM BETWEEN 4 AND 5` 는 0건이라고 했어요. 중간을 뽑으려면 정렬한 결과에 ROWNUM 을 ==별칭을 붙인 진짜 컬럼==으로 만들어 놓고, 한 번 더 감싸서 그 별칭으로 걸러요. 인라인 뷰가 두 겹이 됩니다.' },
+    { t: 'p', x: '`ROWNUM BETWEEN 4 AND 5` 는 0건이라고 했어요. 중간을 뽑으려면 정렬한 결과에 ROWNUM 을 ==별칭을 붙인 진짜 컬럼==으로 만들어 놓고, 한 번 더 감싸서 그 별칭으로 걸러요. 인라인 뷰가 두 겹이 돼요.' },
     { t: 'sql', code: `SELECT ENAME, SAL
   FROM (SELECT ENAME, SAL, ROWNUM AS RN
           FROM (SELECT ENAME, SAL
@@ -104,7 +104,7 @@ SQLD.add({
       note: '안쪽에서 정렬 → 가운데에서 번호를 컬럼으로 고정 → 바깥에서 RN 으로 거르기.' },
 
     { t: 'h', x: '윈도우 함수로 뽑기' },
-    { t: 'p', x: '윈도우 함수로 순위를 붙이고 바깥에서 거르는 방법이에요. 윈도우 함수는 WHERE 에 쓸 수 없어서 여기서도 인라인 뷰가 필요해요. 동점이 있으면 어떤 함수를 쓰느냐에 따라 건수가 달라집니다.' },
+    { t: 'p', x: '윈도우 함수로 순위를 붙이고 바깥에서 거르는 방법이에요. 윈도우 함수는 WHERE 에 쓸 수 없어서 여기서도 인라인 뷰가 필요해요. 동점이 있으면 어떤 함수를 쓰느냐에 따라 건수가 달라져요.' },
     { t: 'sql', code: `SELECT ENAME, SAL
   FROM (SELECT ENAME, SAL,
                RANK() OVER (ORDER BY SAL DESC) AS RK
@@ -154,9 +154,9 @@ SQLD.add({
       ['건너뛰고 자르기', '`OFFSET n ROWS FETCH NEXT m ROWS ONLY`', '`OFFSET n ROWS FETCH NEXT m ROWS ONLY`'],
       ['순위 함수', '`ROW_NUMBER`, `RANK`, `DENSE_RANK`', '같다']
     ] },
-    { t: 'trap', title: 'WITH TIES 는 N 건보다 많이 나올 수 있어요', x: '`TOP 2 WITH TIES` 나 `FETCH FIRST 2 ROWS WITH TIES` 는 "2건"이 아니라 "2건 + 마지막 행과 동점인 행"이에요. 동점 기준은 ORDER BY 에 쓴 컬럼이라서 둘 다 ORDER BY 와 함께 써야 해요. SQL Server 의 `TOP N WITH TIES` 는 ORDER BY 없이 쓰면 오류입니다. 결과 건수를 묻는 문제에서는 N 번째 행의 값과 같은 행이 몇 개 더 있는지 세면 돼요.' },
-    { t: 'check', q: '점수가 95, 90, 90, 90, 80 인 다섯 행에서 점수 내림차순 TOP 3 WITH TIES 는 몇 건일까요?', a: '4건이에요. 세 번째 행이 90 이고 90 이 하나 더 있어서 같이 나옵니다. RANK 로 3 이하를 걸러도 1, 2, 2, 2, 5 라서 똑같이 4건이에요.' },
-    { t: 'check', q: 'WHERE ROWNUM <= 5 AND ROWNUM > 2 는 3건이 나올까요?', a: '0건이에요. 첫 행이 번호 1 을 받는데 `ROWNUM > 2` 에서 탈락하고, 다음 행도 다시 1 을 받아 탈락해요. 끝까지 통과하는 행이 없습니다.' }
+    { t: 'trap', title: 'WITH TIES 는 N 건보다 많이 나올 수 있어요', x: '`TOP 2 WITH TIES` 나 `FETCH FIRST 2 ROWS WITH TIES` 는 "2건"이 아니라 "2건 + 마지막 행과 동점인 행"이에요. 동점 기준은 ORDER BY 에 쓴 컬럼이라서 둘 다 ORDER BY 와 함께 써야 해요. SQL Server 의 `TOP N WITH TIES` 는 ORDER BY 없이 쓰면 오류예요. 결과 건수를 묻는 문제에서는 N 번째 행의 값과 같은 행이 몇 개 더 있는지 세면 돼요.' },
+    { t: 'check', q: '점수가 95, 90, 90, 90, 80 인 다섯 행에서 점수 내림차순 TOP 3 WITH TIES 는 몇 건일까요?', a: '4건이에요. 세 번째 행이 90 이고 90 이 하나 더 있어서 같이 나와요. RANK 로 3 이하를 걸러도 1, 2, 2, 2, 5 라서 똑같이 4건이에요.' },
+    { t: 'check', q: 'WHERE ROWNUM <= 5 AND ROWNUM > 2 는 3건이 나올까요?', a: '0건이에요. 첫 행이 번호 1 을 받는데 `ROWNUM > 2` 에서 탈락하고, 다음 행도 다시 1 을 받아 탈락해요. 끝까지 통과하는 행이 없어요.' }
   ],
   keys: [
     'ROWNUM 은 WHERE 를 통과한 행에 1 부터 붙는다. = 1, <= N 은 되고 = 2, > 1 은 0건(오류 아님)',
@@ -184,7 +184,7 @@ SQLD.add({
         { code: `SELECT * FROM EMP WHERE ROWNUM >= 1;` }
       ],
       answer: 3,
-      why: 'ROWNUM 은 조건을 통과한 행에 1 부터 붙어요. `ROWNUM > 1` 은 첫 행이 1 을 받고 탈락하고, 다음 행도 다시 1 을 받아 탈락해서 0건입니다. 1번은 1건, 2번은 2건, 4번은 10건이 나와요.' },
+      why: 'ROWNUM 은 조건을 통과한 행에 1 부터 붙어요. `ROWNUM > 1` 은 첫 행이 1 을 받고 탈락하고, 다음 행도 다시 1 을 받아 탈락해서 0건이에요. 1번은 1건, 2번은 2건, 4번은 10건이 나와요.' },
     { id: 'q13-02', level: 2, tag: 'ROWNUM 과 ORDER BY',
       q: '아래 SQL 의 결과로 알맞은 것은? (Oracle. 테이블은 적힌 순서대로 읽힌다고 가정하고, 결과는 출력 순서대로 적었다)',
       tables: [{ name: 'PROD', head: ['PNAME', 'PRICE'], rows: [['A', 300], ['B', 900], ['C', 500], ['D', 700], ['E', 100]] }],
@@ -194,7 +194,7 @@ SQLD.add({
  ORDER BY PRICE DESC;`,
       choices: ['B, A', 'B, D', 'A, B', 'E, A'],
       answer: 1,
-      why: 'WHERE 가 ORDER BY 보다 먼저 실행돼요. 앞의 두 행 A(300), B(900) 를 먼저 자르고 그 둘을 가격 내림차순으로 정렬해서 B, A 가 나옵니다. B, D 는 전체에서 가장 비싼 두 상품인데, 그 결과를 원하면 인라인 뷰에서 먼저 정렬해야 해요.' },
+      why: 'WHERE 가 ORDER BY 보다 먼저 실행돼요. 앞의 두 행 A(300), B(900) 를 먼저 자르고 그 둘을 가격 내림차순으로 정렬해서 B, A 가 나와요. B, D 는 전체에서 가장 비싼 두 상품인데, 그 결과를 원하면 인라인 뷰에서 먼저 정렬해야 해요.' },
     { id: 'q13-03', level: 2, tag: 'TOP 과 WITH TIES',
       q: '아래 SQL 을 SQL Server 에서 실행했을 때 결과 건수는?',
       tables: [{ name: 'EMP', head: ['ENAME', 'SAL'], rows: [['A', 500], ['B', 400], ['C', 400], ['D', 400], ['E', 200]] }],
@@ -203,7 +203,7 @@ SQLD.add({
  ORDER BY SAL DESC;`,
       choices: ['2건', '3건', '4건', '5건'],
       answer: 3,
-      why: '정렬하면 500, 400, 400, 400, 200 이에요. 위에서 두 번째 행의 SAL 이 400 이고, WITH TIES 는 마지막 행과 같은 값을 가진 행을 전부 같이 가져오니 400 세 명이 다 나와서 4건입니다. WITH TIES 가 없으면 2건이에요.' },
+      why: '정렬하면 500, 400, 400, 400, 200 이에요. 위에서 두 번째 행의 SAL 이 400 이고, WITH TIES 는 마지막 행과 같은 값을 가진 행을 전부 같이 가져오니 400 세 명이 다 나와서 4건이에요. WITH TIES 가 없으면 2건이에요.' },
     { id: 'q13-04', level: 3, tag: 'ROWNUM 페이징',
       q: 'PROD 테이블에서 가격(PRICE)이 높은 순서로 2 ~ 3 번째 상품을 구하려고 한다. 원하는 결과가 나오는 SQL 은? (Oracle. PRICE 에 중복은 없다)',
       choices: [
@@ -225,7 +225,7 @@ SQLD.add({
  ORDER BY PRICE DESC;` }
       ],
       answer: 2,
-      why: '1번과 4번은 ROWNUM 조건이 1 을 포함하지 않아 0건이에요. 3번은 ROWNUM 과 ORDER BY 가 같은 문장에 있어서 RN 이 정렬 전 순서로 붙어요. 2 ~ 3 번째로 읽힌 행이 나올 뿐 가격 순위와 상관없습니다. 안쪽에서 정렬하고, 가운데에서 번호를 컬럼으로 만들고, 바깥에서 거르는 2번이 맞아요.' },
+      why: '1번과 4번은 ROWNUM 조건이 1 을 포함하지 않아 0건이에요. 3번은 ROWNUM 과 ORDER BY 가 같은 문장에 있어서 RN 이 정렬 전 순서로 붙어요. 2 ~ 3 번째로 읽힌 행이 나올 뿐 가격 순위와 상관없어요. 안쪽에서 정렬하고, 가운데에서 번호를 컬럼으로 만들고, 바깥에서 거르는 2번이 맞아요.' },
     { id: 'q13-05', level: 2, tag: 'FETCH 와 OFFSET',
       q: '아래 SQL 의 결과로 알맞은 것은? (출력 순서대로 적었다)',
       tables: [{ name: 'SCORE', head: ['NAME', 'PT'], rows: [['C', 85], ['A', 95], ['E', 75], ['B', 90], ['D', 80]] }],
@@ -236,7 +236,7 @@ SQLD.add({
  FETCH NEXT 2 ROWS ONLY;`,
       choices: ['A, B', 'C, D', 'B, C, D', 'B, C'],
       answer: 4,
-      why: '점수 내림차순은 A(95), B(90), C(85), D(80), E(75) 예요. OFFSET 1 ROWS 로 A 를 건너뛰고 그다음 두 행 B, C 를 가져옵니다. FETCH 절은 ORDER BY 뒤에 실행돼서 테이블에 적힌 순서와는 상관없어요.' },
+      why: '점수 내림차순은 A(95), B(90), C(85), D(80), E(75) 예요. OFFSET 1 ROWS 로 A 를 건너뛰고 그다음 두 행 B, C 를 가져와요. FETCH 절은 ORDER BY 뒤에 실행돼서 테이블에 적힌 순서와는 상관없어요.' },
     { id: 'q13-06', level: 3, tag: '동점과 건수',
       q: '아래 EMP 테이블에 대해 다음 SQL 을 각각 실행했다. 결과 건수가 나머지 셋과 다른 것은? (Oracle)',
       tables: [{ name: 'EMP', head: ['ENAME', 'SAL'], rows: [['A', 500], ['B', 400], ['C', 400], ['D', 300], ['E', 300], ['F', 100]] }],
@@ -259,7 +259,7 @@ SQLD.add({
  WHERE DR <= 3;` }
       ],
       answer: 4,
-      why: 'SAL 내림차순은 500, 400, 400, 300, 300, 100 이에요. 1번은 세 번째 행이 400 인데 400 은 이미 둘 다 들어 있어 3건, 2번은 RANK 가 1, 2, 2, 4, 4, 6 이라 3건, 3번은 ROW_NUMBER 라 3건이에요. DENSE_RANK 는 1, 2, 2, 3, 3, 4 라서 300 두 명까지 들어와 5건입니다.' },
+      why: 'SAL 내림차순은 500, 400, 400, 300, 300, 100 이에요. 1번은 세 번째 행이 400 인데 400 은 이미 둘 다 들어 있어 3건, 2번은 RANK 가 1, 2, 2, 4, 4, 6 이라 3건, 3번은 ROW_NUMBER 라 3건이에요. DENSE_RANK 는 1, 2, 2, 3, 3, 4 라서 300 두 명까지 들어와 5건이에요.' },
     { id: 'q13-07', level: 1, tag: 'Top N 종합',
       q: 'Top N 쿼리에 대한 설명으로 가장 적절하지 않은 것은?',
       choices: [
@@ -269,6 +269,6 @@ SQLD.add({
         'OFFSET 2 ROWS 는 앞의 두 행을 건너뛰라는 뜻이다.'
       ],
       answer: 1,
-      why: 'ROWNUM 은 WHERE 를 통과할 때 붙고, ORDER BY 는 그 뒤에 실행돼요. 그래서 정렬한 순서대로 번호를 붙이려면 인라인 뷰에서 먼저 정렬해야 합니다. 나머지 셋은 맞는 설명이에요.' }
+      why: 'ROWNUM 은 WHERE 를 통과할 때 붙고, ORDER BY 는 그 뒤에 실행돼요. 그래서 정렬한 순서대로 번호를 붙이려면 인라인 뷰에서 먼저 정렬해야 해요. 나머지 셋은 맞는 설명이에요.' }
   ]
 });
